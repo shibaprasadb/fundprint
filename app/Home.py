@@ -15,6 +15,11 @@ def main():
 
     st.title("Fundprint")
     st.markdown("*A CASual look at your mutual fund statement.*")
+    st.markdown(
+        "Fundprint shows how your investments are doing based on how long you have held them, "
+        "and compares each holding period with what the same money would have earned in a "
+        "Nifty 50 index fund."
+    )
 
     ui.promise_box()
     st.markdown(ui.PROMISE_DETAIL)
