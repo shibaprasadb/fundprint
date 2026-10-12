@@ -24,7 +24,9 @@ mount(
     requirements: ["casparser", "pydantic", "python-dateutil", "scipy", "matplotlib", "sqlite3", "click",
                    "colorama", "rich", "cryptography", "charset-normalizer", "protobuf", "itsdangerous",
                    "python-multipart"],
-    streamlitConfig: { "client.showErrorDetails": "none", "client.toolbarMode": "minimal" },
+    // Light theme with a white background by default, even when the device is set to dark mode
+    streamlitConfig: { "client.showErrorDetails": "none", "client.toolbarMode": "minimal",
+                       "theme.base": "light", "theme.backgroundColor": "#FFFFFF" },
   },
   document.getElementById("root"),
 );

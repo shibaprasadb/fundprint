@@ -7,7 +7,7 @@ from fundprint.classify import UNCLASSIFIED, classify_isin
 from fundprint.parse import CasError, parse_cas
 from fundprint.sample import sample_cas, sample_categories
 
-st.set_page_config(page_title="Fundprint", page_icon="🔒")
+st.set_page_config(page_title="Fundprint", page_icon="🔒", layout="wide")
 
 def main():
     ui.sidebar_note()

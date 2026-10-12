@@ -39,6 +39,8 @@ def load_public_data():
 
 
 def sidebar_note():
+    # The pages use the wide layout; this stops them stretching edge to edge on very large screens.
+    st.markdown("<style>.block-container{max-width:1200px}</style>", unsafe_allow_html=True)
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 
 

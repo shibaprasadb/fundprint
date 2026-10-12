@@ -1,0 +1,4 @@
+# Used when running on a computer (streamlit run app/Home.py). The browser build sets the same in web/boot.js.
+[theme]
+base = "light"
+backgroundColor = "#FFFFFF"
