@@ -10,7 +10,7 @@ from fundprint.charts import allocation_chart, facet_chart
 from fundprint.classify import ASSET_CLASSES, UNCLASSIFIED, classify_isin
 from fundprint.lots import held_lots
 
-st.set_page_config(page_title="Fundprint · Vintage", page_icon="🔒")
+st.set_page_config(page_title="Fundprint · Vintage", page_icon="🔒", layout="wide")
 
 def main():
     ui.sidebar_note()
