@@ -6,7 +6,8 @@ from pathlib import Path
 import pandas as pd
 from streamlit.testing.v1 import AppTest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))  # the app imports `ui` directly
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "app"))  # the app imports `ui` directly
 
 from fundprint.sample import sample_cas, sample_categories  # noqa: E402
 
@@ -14,7 +15,7 @@ BANNED = re.compile(r"₹|\bRs\b|\bINR\b|lakh|crore", re.I)
 
 
 def _run(scope):
-    at = AppTest.from_file("app/pages/1_Vintage.py", default_timeout=90)
+    at = AppTest.from_file(str(ROOT / "app/pages/1_Vintage.py"), default_timeout=90)
     at.session_state["parsed"] = sample_cas(pd.Timestamp.today())
     at.session_state["categories"] = sample_categories()
     at.session_state["is_sample"] = True
