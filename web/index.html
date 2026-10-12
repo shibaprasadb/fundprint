@@ -10,10 +10,23 @@
        starts from a data: URL). What protects your file is connect-src 'self': no request can leave this site. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <link rel="stylesheet" href="./vendor/stlite/stlite.css">
+  <style>
+    #loading-note { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 1000000;
+                    display: flex; align-items: center; gap: 0.75rem; max-width: calc(100vw - 2rem);
+                    padding: 0.9rem 1.25rem; border-radius: 0.5rem; background: #FFFFFF; color: #31333F;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); font: 1rem system-ui, sans-serif; }
+    #loading-note .spinner { flex: none; width: 1.1rem; height: 1.1rem; border-radius: 50%;
+                             border: 2px solid #D5D6DB; border-top-color: #31333F;
+                             animation: loading-spin 0.8s linear infinite; }
+    @keyframes loading-spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-  <div id="root">
-    <p style="font-family:system-ui,sans-serif;padding:2rem">Loading Python in your browser… this happens once per visit.</p>
+  <div id="root"></div>
+  <!-- Shown on top of the page until the app has drawn itself; boot.js removes it -->
+  <div id="loading-note" role="status">
+    <span class="spinner"></span>
+    <span>First time load takes 5-10 secs. Almost there…</span>
   </div>
   <script type="module" src="./boot.js"></script>
 </body>
