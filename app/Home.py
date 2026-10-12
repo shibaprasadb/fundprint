@@ -13,7 +13,7 @@ def main():
     ui.sidebar_note()
     bench, cats, manifest = ui.load_public_data()
 
-    st.title("Fundprint")
+    st.title("Fundprint (Beta)")
     st.markdown("*A CASual look at your mutual fund statement.*")
     st.markdown(
         "Fundprint shows how your investments are doing based on how long you have held them, "
