@@ -14,7 +14,7 @@ DIST = ROOT / "dist"
 # files the browser app needs, as (source, path inside the app)
 APP_FILES = (
     [(ROOT / "app/Home.py", "Home.py"), (ROOT / "app/ui.py", "ui.py"),
-     (ROOT / "app/pages/1_Vintage.py", "pages/1_Vintage.py")]
+     (ROOT / "app/pages/1_Time_in_Market.py", "pages/1_Time_in_Market.py")]
     + [(p, f"fundprint/{p.name}") for p in sorted((ROOT / "fundprint").glob("*.py"))]
     + [(p, f"rapidfuzz/{p.name}") for p in sorted((ROOT / "web/rapidfuzz_stub").glob("*.py"))]
     + [(ROOT / "data" / n, f"data/{n}") for n in ("benchmark_nav.json", "scheme_categories.json", "manifest.json")]
