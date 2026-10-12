@@ -1,0 +1,11 @@
+*.pdf
+.ipynb_checkpoints/
+__pycache__/
+.pytest_cache/
+.venv/
+*.png
+!docs/*.png
+.DS_Store
+dist/
+web/vendor/
+!tests/fixtures/*.pdf

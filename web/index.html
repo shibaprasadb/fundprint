@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fundprint: a CASual look at your mutual fund statement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Break your mutual fund returns down by how long you have held each purchase, and compare with the Nifty 50. Runs entirely in your browser.">
+  <!-- The browser itself blocks any request to another site, even from a buggy dependency (rule P6).
+       'unsafe-eval', 'wasm-unsafe-eval' and data: scripts are needed by Python-in-the-browser (its worker
+       starts from a data: URL). What protects your file is connect-src 'self': no request can leave this site. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <link rel="stylesheet" href="./vendor/stlite/stlite.css">
+</head>
+<body>
+  <div id="root">
+    <p style="font-family:system-ui,sans-serif;padding:2rem">Loading Python in your browser… this happens once per visit.</p>
+  </div>
+  <script type="module" src="./boot.js"></script>
+</body>
+</html>

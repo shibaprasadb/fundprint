@@ -1,0 +1,39 @@
+name: deploy
+# Builds the static site and pushes it into the separate `lab` repo (the only place the app is
+# published). Never turn on GitHub Pages in THIS repo: see SPEC.md section 3.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows: [refresh-data]
+    types: [completed]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - run: python scripts/fetch_vendor.py
+      - run: python scripts/build_web.py
+      - name: Check the build has no outside links
+        run: |
+          ! grep -rEl "https?://(cdn|unpkg|fonts|www\.google|files\.pythonhosted|pypi)" dist/index.html dist/boot.js dist/app-manifest.json
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/lab
+          ssh-key: ${{ secrets.LAB_DEPLOY_KEY }}   # a deploy key limited to the lab repo
+          path: lab
+      - name: Copy the build into lab/fundprint
+        run: |
+          rm -rf lab/fundprint
+          mkdir -p lab/fundprint
+          cp -R dist/. lab/fundprint/
+          cd lab
+          git config user.name "fundprint-deploy"
+          git config user.email "deploy@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "Deploy fundprint ${GITHUB_SHA::7}" && git push)
