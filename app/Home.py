@@ -16,7 +16,7 @@ def main():
     st.title("Fundprint")
     st.markdown("*A CASual look at your mutual fund statement.*")
 
-    st.markdown(ui.PROMISE)
+    ui.promise_box()
     st.markdown(ui.PROMISE_DETAIL)
 
     with st.expander("How to get your CAS"):
