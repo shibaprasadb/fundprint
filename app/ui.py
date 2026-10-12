@@ -1,6 +1,7 @@
 """Bits shared by every page: the promise banner, footer, public data loading."""
 import json
 import sys
+import traceback
 from pathlib import Path
 
 import pandas as pd
@@ -53,3 +54,19 @@ def footer(manifest):
 def pct(v):
     """Format a percentage, or 'n/a' when it couldn't be calculated."""
     return "n/a" if pd.isna(v) else f"{v:.1f}%"
+
+
+def report_failure(exc):
+    """Show a safe error: the kind of error and where in our code it happened.
+
+    Never shows the error message or any values, because those could contain
+    details from the statement (rule P8).
+    """
+    frames = traceback.extract_tb(exc.__traceback__)
+    last = frames[-1] if frames else None
+    where = f"{Path(last.filename).name}, line {last.lineno}, in {last.name}" if last else "unknown place"
+    st.error(
+        "Something went wrong while showing this page. "
+        f"Error type: {type(exc).__name__}. Location: {where}. "
+        "Nothing from your statement is shown here."
+    )
