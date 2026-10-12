@@ -38,7 +38,17 @@ MULTI_MATCH_FUNDS = [
 ]
 
 
-def build(path, password=None, multi=False):
+# a statement with many funds and rows, to check the app copes with a realistic size
+BIG_FUNDS = [
+    ("Bandhan Mutual Fund" if i % 2 == 0 else "ICICI Prudential Mutual Fund",
+     ("GD203-Bandhan Flexi Cap Fund - Direct Plan Growth" if i % 2 == 0
+      else "P8189-ICICI Prudential Nifty 50 Index Fund - Direct Plan Growth"),
+     "INF194K01W62" if i % 2 == 0 else "INF109K012M7", f"3333{i:04d}", 70, 50.0 + i, 0.008 + i / 2000)
+    for i in range(14)
+]
+
+
+def build(path, password=None, multi=False, big=False):
     enc = StandardEncryption(password) if password else None
     c = canvas.Canvas(path, pagesize=A4, encrypt=enc)
     w, h = A4
@@ -62,7 +72,7 @@ def build(path, password=None, multi=False):
     line("1 Sample Street, Sample City 000000")
     line("Mobile: 9999999999")
     y -= 6
-    funds = MULTI_MATCH_FUNDS if multi else [
+    funds = BIG_FUNDS if big else MULTI_MATCH_FUNDS if multi else [
         ("Bandhan Mutual Fund", "GD203-Bandhan Flexi Cap Fund - Direct Plan Growth", "INF194K01W62", "11111111", 40, 100.0, 0.011),
         ("ICICI Prudential Mutual Fund", "P8189-ICICI Prudential Nifty 50 Index Fund - Direct Plan Growth", "INF109K012M7", "11111111", 18, 50.0, 0.015),
     ]
@@ -101,5 +111,5 @@ def build(path, password=None, multi=False):
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a != "--multi"]
-    build(args[0], args[1] if len(args) > 1 else None, multi="--multi" in sys.argv)
+    args = [a for a in sys.argv[1:] if a not in ("--multi", "--big")]
+    build(args[0], args[1] if len(args) > 1 else None, multi="--multi" in sys.argv, big="--big" in sys.argv)

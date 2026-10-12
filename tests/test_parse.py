@@ -35,3 +35,28 @@ def test_wrong_password_message_has_no_file_data():
 def test_garbage_file_is_a_friendly_error():
     with pytest.raises(CasError, match="Couldn't read"):
         parse_cas(b"not a pdf", "")
+
+
+def test_pdf_library_writes_no_debug_logs():
+    """Hosts that set the root logger to DEBUG (the browser build does, and forwards every line to the
+    page) must not get a flood of messages from the PDF library. Without the fix, pdfminer writes
+    about 20,000 lines for this tiny file, which freezes or crashes a browser tab on a real statement."""
+    import logging
+
+    pdfminer_high_level = pytest.importorskip("pdfminer.high_level")
+
+    class Count(logging.Handler):
+        n = 0
+
+        def emit(self, record):
+            Count.n += 1
+
+    root, handler, old = logging.getLogger(), Count(logging.DEBUG), logging.getLogger().level
+    root.addHandler(handler)
+    root.setLevel(logging.DEBUG)
+    try:
+        pdfminer_high_level.extract_text(PLAIN)
+    finally:
+        root.removeHandler(handler)
+        root.setLevel(old)
+    assert Count.n < 50, f"{Count.n} log lines from the PDF library"

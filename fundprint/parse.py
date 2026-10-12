@@ -3,10 +3,19 @@
 Privacy: nothing here is cached, logged or written to disk. The PDF is read
 from memory only, and error messages never contain anything from the file.
 """
+import logging
 from dataclasses import dataclass
 from io import BytesIO
 
 import pandas as pd
+
+
+# The PDF libraries write a debug line for almost every token they read. Some hosts
+# (the browser build sets the root logger to DEBUG and forwards every line to the page)
+# turn that into hundreds of thousands of messages, which freezes or crashes the tab.
+# Keep these libraries to warnings and errors only.
+for _name in ("pdfminer", "casparser", "casparser_isin"):
+    logging.getLogger(_name).setLevel(logging.WARNING)
 
 
 class CasError(Exception):
