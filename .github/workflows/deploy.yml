@@ -32,6 +32,8 @@ jobs:
           rm -rf lab/fundprint
           mkdir -p lab/fundprint
           cp -R dist/. lab/fundprint/
+          # Without this, GitHub Pages hides files starting with "_" (like __init__.py) and the app can't load
+          touch lab/.nojekyll
           cd lab
           git config user.name "fundprint-deploy"
           git config user.email "deploy@users.noreply.github.com"
