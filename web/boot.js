@@ -12,6 +12,18 @@ const files = Object.fromEntries(
 
 const here = (rel) => new URL(rel, location.href).href;
 
+// Take the "first time load" note away once the app has drawn its first real element.
+// While Python is still starting, the page only holds an empty box or grey placeholder bars.
+const root = document.getElementById("root");
+const isReal = (el) => el.childElementCount > 0 && !el.querySelector('[data-testid="stAppSkeleton"]');
+const drawn = new MutationObserver(() => {
+  if ([...root.querySelectorAll('[data-testid="stMain"] [data-testid="stElementContainer"]')].some(isReal)) {
+    document.getElementById("loading-note")?.remove();
+    drawn.disconnect();
+  }
+});
+drawn.observe(root, { childList: true, subtree: true });
+
 mount(
   {
     entrypoint: "Home.py",
@@ -28,5 +40,5 @@ mount(
     streamlitConfig: { "client.showErrorDetails": "none", "client.toolbarMode": "minimal",
                        "theme.base": "light", "theme.backgroundColor": "#FFFFFF" },
   },
-  document.getElementById("root"),
+  root,
 );
