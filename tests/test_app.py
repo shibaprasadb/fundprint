@@ -1,4 +1,4 @@
-"""No-rupee check: render the Vintage page with sample data and look for money text."""
+"""No-rupee check: render the Time in Market page with sample data and look for money text."""
 import re
 import sys
 from pathlib import Path
@@ -15,7 +15,7 @@ BANNED = re.compile(r"₹|\bRs\b|\bINR\b|lakh|crore", re.I)
 
 
 def _run(scope):
-    at = AppTest.from_file(str(ROOT / "app/pages/1_Vintage.py"), default_timeout=90)
+    at = AppTest.from_file(str(ROOT / "app/pages/1_Time_in_Market.py"), default_timeout=90)
     at.session_state["parsed"] = sample_cas(pd.Timestamp.today())
     at.session_state["categories"] = sample_categories()
     at.session_state["is_sample"] = True
@@ -25,7 +25,7 @@ def _run(scope):
     return at
 
 
-def test_vintage_has_no_rupee_text():
+def test_time_in_market_has_no_rupee_text():
     for scope in (None, "Equity funds only"):
         at = _run(scope)
         assert not at.exception

@@ -15,9 +15,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 REPO_URL = "https://github.com/shibaprasadb/fundprint"  # update if the repo lives elsewhere
-PROMISE = "**Nothing is stored. Your file is read and dropped when you close the tab.**"
+PROMISE = "Nothing is stored. Your file is read and dropped when you close the tab."
+PROMISE_WHERE = "Fundprint runs entirely in your browser. Your statement is never uploaded to any server."
 PROMISE_DETAIL = (
-    "Fundprint runs entirely in your browser. Your statement is never uploaded to any server.\n\n"
     f"Don't take our word for it: the [code is open source]({REPO_URL}), and you can open your "
     "browser's Network tab to check that nothing is sent."
 )
@@ -42,6 +42,17 @@ def sidebar_note():
     # The pages use the wide layout; this stops them stretching edge to edge on very large screens.
     st.markdown("<style>.block-container{max-width:1200px}</style>", unsafe_allow_html=True)
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
+
+
+def promise_box():
+    """The privacy promise in a light red box, so it is the first thing people notice."""
+    st.markdown(
+        '<div style="background:#FDECEA;border:1px solid #F5C2BD;border-radius:0.5rem;'
+        'padding:0.9rem 1.1rem;margin-bottom:1rem;color:#1A1A1A">'
+        f'<p style="margin:0 0 0.4rem 0"><strong>{PROMISE}</strong></p>'
+        f'<p style="margin:0">{PROMISE_WHERE}</p></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def footer(manifest):

@@ -64,7 +64,7 @@ This product is also a public portfolio piece. Code quality, README clarity and 
 
 ### v1 (this build)
 - Landing page with the privacy promise, upload and password.
-- One analysis module: **Vintage** (XIRR by holding period vs Nifty 50).
+- One analysis module: **Time in Market** (XIRR by holding period vs Nifty 50).
 - "Try with sample data" button (synthetic portfolio, no upload needed).
 - **Percentages only: no rupee amounts anywhere** (see §7, "No rupee amounts").
 - Download charts as PNG (generated in the browser).
@@ -146,7 +146,7 @@ fundprint/
 ├── app/
 │   ├── Home.py                # landing: promise, upload, password, sample data
 │   ├── pages/
-│   │   └── 1_Vintage.py       # the v1 analysis
+│   │   └── 1_Time_in_Market.py  # the v1 analysis
 │   └── ui.py                  # shared bits: promise banner, percentage formatting, disclaimer
 ├── web/
 │   ├── index.html             # stlite mount, CSP meta tag, loading message
@@ -264,11 +264,11 @@ Compute `invested`, `value`, `xirr_%`, `abs_%` (= value / invested − 1), and `
 3. "How to get your CAS" (collapsible): request a **Detailed** statement from CAMS or KFintech, with the start date set before your first investment and "with zero balance folios" or "without" either fine. Include the CAMS link.
 4. Upload (`st.file_uploader`, PDF only, one file) + password field.
 5. "Or try with sample data" button.
-6. After parsing: a small summary (number of funds, statement period, unclassified count; no amounts) and a button to go to Vintage.
+6. After parsing: a small summary (number of funds, statement period, unclassified count; no amounts) and a button to go to Time in Market.
 
 Hold parsed data in `st.session_state` only (in memory, gone when the tab closes). Never in caches (P3).
 
-### Vintage page
+### Time in Market page
 1. Controls: scope (All / Equity only), plus the Unclassified-fund fixer if needed.
 2. **Allocation chart**: share of money invested per bucket (horizontal bars, biggest bucket highlighted).
 3. **Facet chart**: columns = buckets, rows = XIRR (top) and absolute return (bottom); bars "My funds" vs "Nifty 50"; title generated from the data, e.g. "Equity funds beat the Nifty 50 in 2 of 3 buckets" (for <1Y the comparison uses absolute return, otherwise XIRR).
@@ -305,13 +305,13 @@ All fixtures synthetic (P10). `scripts/make_sample.py` builds them.
 - Our `xirr()` vs pyxirr on 500 random cash-flow sets → max difference < 1e-6.
 - Classification table: one case per mapping rule, plus Unclassified.
 
-**End-to-end:** a synthetic CAS PDF (with and without password) → parse → Vintage tables match expected numbers.
+**End-to-end:** a synthetic CAS PDF (with and without password) → parse → Time in Market tables match expected numbers.
 
 **Privacy tests:**
 - Static check: no `st.cache_*` decorator on any function in `parse.py`, `lots.py`, `benchmark.py`, or app code that touches user data (a simple grep-based test).
 - Static check: no `localStorage`/`sessionStorage`/`indexedDB` in `web/`.
-- No-rupee check: render the Vintage page with sample data (Streamlit `AppTest`) and assert that no text element, table cell or chart label contains `₹`, `Rs`, `INR`, `lakh`, `crore`, or any of the internal `invested`/`value` numbers.
-- Playwright (if feasible): load the deployed page, upload the synthetic CAS, run Vintage, and assert no network requests after the initial load.
+- No-rupee check: render the Time in Market page with sample data (Streamlit `AppTest`) and assert that no text element, table cell or chart label contains `₹`, `Rs`, `INR`, `lakh`, `crore`, or any of the internal `invested`/`value` numbers.
+- Playwright (if feasible): load the deployed page, upload the synthetic CAS, run Time in Market, and assert no network requests after the initial load.
 
 ---
 
@@ -338,7 +338,7 @@ Code comments: plain English, explain *why* rather than *what*.
 | M0 | **Browser spike** | Synthetic CAS parses in stlite (§3), or the fallback is agreed with Shiba |
 | M1 | Core logic + tests | `fundprint/` passes all §9 unit tests; matches the notebook on the same synthetic data |
 | M2 | Data pipeline | `refresh-data.yml` produces `data/*.json`; fail-safe works |
-| M3 | Streamlit UI (local) | Home + Vintage work with `streamlit run`; no rupee amounts anywhere (no-rupee test passes) |
+| M3 | Streamlit UI (local) | Home + Time in Market work with `streamlit run`; no rupee amounts anywhere (no-rupee test passes) |
 | M4 | stlite build + deploy | Live at `lab.shibaprasadb.com/fundprint`; assets self-hosted; CSP in place |
 | M5 | Privacy acceptance | Network-tab check passes (§0); README + PRIVACY.md done; `shibaprasadb.com/fundprint` returns 404 (Pages off in `fundprint`, §3) |
 | M6 | Launch | Blog post on shibaprasadb.com links to it |

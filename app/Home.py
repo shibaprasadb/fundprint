@@ -16,7 +16,7 @@ def main():
     st.title("Fundprint")
     st.markdown("*A CASual look at your mutual fund statement.*")
 
-    st.markdown(ui.PROMISE)
+    ui.promise_box()
     st.markdown(ui.PROMISE_DETAIL)
 
     with st.expander("How to get your CAS"):
@@ -66,7 +66,7 @@ def main():
         st.success(f"Read {label}: {len(s)} funds, {unclassified} unclassified.")
         if parsed.period_start is not None and parsed.period_end is not None:
             st.caption(f"Statement period: {parsed.period_start:%d %b %Y} to {parsed.period_end:%d %b %Y}")
-        st.page_link("pages/1_Vintage.py", label="See returns by holding period →")
+        st.page_link("pages/1_Time_in_Market.py", label="See returns by holding period →")
 
     ui.footer(manifest)
 
