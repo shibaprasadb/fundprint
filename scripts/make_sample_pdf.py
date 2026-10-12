@@ -4,7 +4,7 @@ Everything in it is invented (names, folio, PAN, amounts). It copies only the
 layout casparser looks for: a CAMSCASWS marker, a statement period, folio and
 scheme header lines, a transaction table, and closing balance / NAV lines.
 
-Usage: python scripts/make_sample_pdf.py out.pdf [password]
+Usage: python scripts/make_sample_pdf.py out.pdf [password] [--multi]
 """
 import sys
 from datetime import date, timedelta
@@ -31,7 +31,14 @@ def sip_rows(n_months, nav0, growth):
     return rows, nav * (1 + growth)
 
 
-def build(path, password=None):
+# one fund whose ISIN matches two rows in casparser's database, which forces the
+# name-matching step (the part the browser build had to stand in for)
+MULTI_MATCH_FUNDS = [
+    ("Taurus Mutual Fund", "104LBDP-Taurus Short Term Income Fund - Regular Plan - IDCW Payout", "INF044D01583", "22222222", 12, 20.0, 0.004),
+]
+
+
+def build(path, password=None, multi=False):
     enc = StandardEncryption(password) if password else None
     c = canvas.Canvas(path, pagesize=A4, encrypt=enc)
     w, h = A4
@@ -55,7 +62,7 @@ def build(path, password=None):
     line("1 Sample Street, Sample City 000000")
     line("Mobile: 9999999999")
     y -= 6
-    funds = [
+    funds = MULTI_MATCH_FUNDS if multi else [
         ("Bandhan Mutual Fund", "GD203-Bandhan Flexi Cap Fund - Direct Plan Growth", "INF194K01W62", "11111111", 40, 100.0, 0.011),
         ("ICICI Prudential Mutual Fund", "P8189-ICICI Prudential Nifty 50 Index Fund - Direct Plan Growth", "INF109K012M7", "11111111", 18, 50.0, 0.015),
     ]
@@ -94,4 +101,5 @@ def build(path, password=None):
 
 
 if __name__ == "__main__":
-    build(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
+    args = [a for a in sys.argv[1:] if a != "--multi"]
+    build(args[0], args[1] if len(args) > 1 else None, multi="--multi" in sys.argv)
