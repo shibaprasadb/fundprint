@@ -60,3 +60,53 @@ def test_pdf_library_writes_no_debug_logs():
         root.removeHandler(handler)
         root.setLevel(old)
     assert Count.n < 50, f"{Count.n} log lines from the PDF library"
+
+
+# ---- clear errors and partial history -------------------------------------------------------
+
+def _cas(open_units=0, close_units=100, txns=((("2022-01-05"), "PURCHASE_SIP", 100.0),), kind="DETAILED"):
+    """A tiny made-up casparser dict with one fund, to try the history checks."""
+    return {
+        "cas_type": kind,
+        "statement_period": {"from": "01-Jan-2020", "to": "09-Oct-2026"},
+        "folios": [{"folio": "1", "schemes": [{
+            "scheme": "Fund", "isin": "INF000000001", "open": open_units, "close": close_units,
+            "valuation": {"date": "2026-10-09", "nav": 10.0},
+            "transactions": [{"date": d, "type": k, "units": u, "amount": abs(u) * 10} for d, k, u in txns],
+        }]}],
+    }
+
+
+def test_complete_history_is_accepted():
+    from fundprint.parse import from_dict
+    assert len(from_dict(_cas()).txns) == 1
+
+
+@pytest.mark.parametrize("cas", [
+    _cas(open_units=40, close_units=140),                                              # units held on day one
+    _cas(close_units=-100, txns=(("2022-01-05", "REDEMPTION", -100.0),)),               # first move is a sale
+    _cas(close_units=90),                                                              # units don't add up
+])
+def test_partial_history_is_a_friendly_error(cas):
+    from fundprint.parse import from_dict
+    with pytest.raises(CasError, match="start after your first investment") as e:
+        from_dict(cas)
+    assert e.value.step == 2
+
+
+def test_summary_cas_points_to_step_2():
+    from fundprint.parse import from_dict
+    with pytest.raises(CasError, match="Summary statement. Please request the \\*\\*Detailed\\*\\* one") as e:
+        from_dict(_cas(kind="SUMMARY"))
+    assert e.value.step == 2
+
+
+def test_error_messages_match_the_spec():
+    with pytest.raises(CasError) as wrong:
+        read(LOCKED, "nope")
+    assert str(wrong.value) == "That password didn't open the file. It's the one you set on the CAMS form."
+    assert wrong.value.step == 2
+    with pytest.raises(CasError) as bad:
+        parse_cas(b"not a pdf", "")
+    assert str(bad.value) == "Couldn't read this file. Is it a CAMS or KFintech statement PDF?"
+    assert bad.value.step is not None

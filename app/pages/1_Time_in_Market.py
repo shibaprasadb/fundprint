@@ -20,10 +20,13 @@ def main():
 
     parsed = st.session_state.get("parsed")
     if parsed is None:
-        st.info("Upload a statement (or try the sample) on the Home page first.")
+        st.info("Upload a statement (or see the sample) on the Home page first.")
         st.page_link("Home.py", label="← Home")
         ui.footer(manifest)
         st.stop()
+
+    if st.session_state.get("is_sample"):
+        ui.sample_banner()
 
     cats = st.session_state["categories"]
     overrides = st.session_state.setdefault("class_overrides", {})

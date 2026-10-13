@@ -46,6 +46,9 @@ cd dist && python -m http.server 8766   # then open http://localhost:8766
 ```
 Note: the browser build uses casparser 0.8.1 (reads PDFs with pdfminer). Newer versions need a PDF library that has no browser build yet.
 
+## The CAMS form screenshot
+The Home page checklist shows `app/assets/cams_form_annotated.png`. To make a new one, take a plain screenshot of the CAMS form with **Detailed** selected and run `python scripts/annotate_cams_form.py path/to/screenshot.png`. The script wipes the email, PAN and password boxes and draws the numbered markers. Keep the original screenshot out of the repo. If the image file is missing, the page simply shows the table without it.
+
 ## Limitations
 - Units already sold aren't counted (active holdings only), so results look slightly kinder than reality.
 - Cash paid out by IDCW payout plans isn't counted as a return.
