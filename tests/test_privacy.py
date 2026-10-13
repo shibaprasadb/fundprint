@@ -18,3 +18,11 @@ def test_no_browser_storage_in_web():
         if f.is_file() and f.suffix in {".html", ".js"} and "vendor" not in f.parts:
             t = f.read_text()
             assert not any(w in t for w in ("localStorage", "sessionStorage", "indexedDB")), f
+
+
+def test_no_browser_storage_in_app_code():
+    """Returning visitors upload again: nothing is saved to resume later."""
+    banned = ("localStorage", "sessionStorage", "indexedDB", "document.cookie", "<script", "components.html")
+    for f in (ROOT / "app").rglob("*.py"):
+        text = f.read_text()
+        assert not any(w in text for w in banned), f

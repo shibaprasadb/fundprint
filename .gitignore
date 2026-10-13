@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 *.png
 !docs/*.png
+!app/assets/*.png
 .DS_Store
 dist/
 web/vendor/

@@ -1,4 +1,5 @@
 """Bits shared by every page: the promise banner, footer, public data loading."""
+import base64
 import json
 import sys
 import traceback
@@ -15,6 +16,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 REPO_URL = "https://github.com/shibaprasadb/fundprint"  # update if the repo lives elsewhere
+APP_URL = "https://lab.shibaprasadb.com/fundprint"
+CAMS_URL = "https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement"
+FORM_IMAGE = HERE / "assets" / "cams_form_annotated.png"
+FORM_IMAGE_ALT = ("CAMS statement form with Detailed selected, the from-date set early, "
+                  "and a password field.")
 PROMISE = "Nothing is stored. Your file is read and dropped when you close the tab."
 PROMISE_WHERE = "Fundprint runs entirely in your browser. Your statement is never uploaded to any server."
 PROMISE_DETAIL = (
@@ -38,9 +44,23 @@ def load_public_data():
     return bench, cats, manifest
 
 
+# The pages use the wide layout; the first rule stops them stretching edge to edge on very large screens.
+# The primary button (see it with sample data) is made big. On phones every button fills the width.
+CSS = """<style>
+.block-container{max-width:1200px}
+button[kind="primary"]{padding:0.9rem 2rem;min-height:3.5rem}
+button[kind="primary"] p{font-size:1.2rem}
+h3[id^="step-"]{font-size:1.25rem}
+@media (max-width: 640px){
+  [data-testid="stElementContainer"]:has(.stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]){width:100% !important}
+  .stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]{width:100% !important}
+  .stButton button, .stLinkButton a, [data-testid="stFormSubmitButton"] button, [data-testid="stPageLink"] a{width:100% !important;justify-content:center}
+}
+</style>"""
+
+
 def sidebar_note():
-    # The pages use the wide layout; this stops them stretching edge to edge on very large screens.
-    st.markdown("<style>.block-container{max-width:1200px}</style>", unsafe_allow_html=True)
+    st.markdown(CSS, unsafe_allow_html=True)
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 
 
@@ -53,6 +73,72 @@ def promise_box():
         f'<p style="margin:0">{PROMISE_WHERE}</p></div>',
         unsafe_allow_html=True,
     )
+
+
+def sample_banner():
+    """Shown on the analysis pages while the made-up portfolio is in use."""
+    st.info("🧪 **You're looking at a sample portfolio (made-up data).**")
+    st.page_link("Home.py", label="Use your own statement →")
+
+
+def show_error(message, step=None):
+    """A friendly error with a link to the checklist step that helps. Never any statement data."""
+    st.error(message)
+    if step:
+        st.markdown(f"[Go to Step {step} ↓](#step-{step})")
+
+
+def _step(number, title):
+    st.subheader(f"Step {number}. {title}", anchor=f"step-{number}")
+
+
+def _form_image():
+    """The annotated screenshot of the CAMS form, or nothing when the file isn't there."""
+    if not FORM_IMAGE.exists():
+        return
+    data = base64.b64encode(FORM_IMAGE.read_bytes()).decode()
+    left, _ = st.columns([5, 1])   # a readable width on a computer; the columns stack to full width on a phone
+    left.markdown(
+        f'<img src="data:image/png;base64,{data}" alt="{FORM_IMAGE_ALT}" '
+        'style="width:100%;height:auto;border:1px solid #E6E6E6;border-radius:0.5rem">',
+        unsafe_allow_html=True,
+    )
+
+
+def come_back_note():
+    st.markdown("💡 **Request it now and come back when the email arrives.** "
+                "Bookmark this page, or copy its link:")
+    st.code(APP_URL, language=None)
+
+
+def cas_checklist():
+    """Four steps to request a Detailed statement from CAMS. Plain words: 'statement', not 'CAS'."""
+    st.markdown("**Don't have your statement yet? It takes about a minute to request.**")
+
+    _step(1, "Open the CAMS statement page")
+    st.link_button("Open CAMS statement page ↗", CAMS_URL)   # opens in a new tab
+    st.caption("Fundprint stays open in this tab.")
+
+    _step(2, "Fill in the form like this")
+    st.markdown("""
+| Field | Choose | Note |
+|---|---|---|
+| ① Statement type | **Detailed** (includes transaction listing) | **Required.** A Summary statement won't work. |
+| ② Period / from date | **A date before your first-ever investment** | Earlier is fine. Missing history makes results wrong. |
+| To date | Today | |
+| Folio listing | Any option | All work. |
+| Email + PAN | Yours | The PDF is emailed to you. |
+| ③ Password | **Something simple you'll remember** | You'll type it here once. Fundprint never stores it. |
+""")
+    _form_image()
+
+    _step(3, "Check your email")
+    st.markdown("The statement usually arrives from CAMS within a few minutes as a PDF attachment. "
+                "If you can't see it, check Spam or Promotions.")
+
+    _step(4, "Come back and upload it")
+    st.markdown("Upload the PDF above and type the password you just set.")
+    st.caption("Already have a CAS from KFintech or CAMS? That works too, as long as it's the Detailed one.")
 
 
 def footer(manifest):
