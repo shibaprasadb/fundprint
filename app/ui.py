@@ -19,7 +19,7 @@ PROMISE = "Nothing is stored. Your file is read and dropped when you close the t
 PROMISE_WHERE = "Fundprint runs entirely in your browser. Your statement is never uploaded to any server."
 PROMISE_DETAIL = (
     f"Don't take our word for it: the [code is open source]({REPO_URL}), and you can open your "
-    "browser's Network tab to check that nothing is sent."
+    "browser's Network tab to check that your file is never sent anywhere."
 )
 DISCLAIMER = (
     "Fundprint is an analytics tool, not investment advice. Past returns don't predict future "

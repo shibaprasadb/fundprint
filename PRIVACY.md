@@ -9,19 +9,28 @@ Fundprint runs entirely in your browser. Your statement is never uploaded to any
 - The file is handled in memory only. It is never written to disk.
 - No caching of anything from your statement (caching is used only for public benchmark data).
 - No `localStorage`, `sessionStorage`, IndexedDB or cookies holding statement data.
-- No analytics, trackers, third-party fonts or external scripts.
-- A Content-Security-Policy tag stops the page from sending data anywhere else.
-- No network calls while you use the app, other than loading its own files.
+- No trackers, third-party fonts or external scripts, with one exception: anonymous visit counts with Umami (see Analytics below).
+- A Content-Security-Policy tag stops the page from sending data anywhere except this site and Umami.
+- No network calls while you use the app, other than loading its own files and those anonymous counts.
 - Error messages never show statement data.
 - Your PDF password is used once to open the file, then dropped.
 - No real statements in this repository; tests use made-up data only.
 
 ## Check it yourself
-1. Open DevTools → Network, upload a statement, and watch: no requests go out after the app has loaded.
+1. Open DevTools → Network, upload a statement, and watch: after the app has loaded, the only requests that leave this site are small ones to `gateway.umami.is`. Click one to see what it holds: the page address, never your file.
 2. Read the Content-Security-Policy tag in the page source.
 3. Read the code. There is no server code to hide anything in.
 
 ## What the browser build enforces
-`web/index.html` carries a Content-Security-Policy tag with `connect-src 'self' blob: data:`. The browser blocks any request to another site, including from the Python worker. During testing the policy caught a CDN request we had missed, which is why Python, its packages and the wheels are now served from this site.
+`web/index.html` carries a Content-Security-Policy tag with `connect-src 'self' blob: data: https://gateway.umami.is`. The browser blocks any request to any other site, including from the Python worker. During testing the policy caught a CDN request we had missed, which is why Python, its packages and the wheels are now served from this site.
 
 One note you may see in the console: the charts ask for an image at `stlite.invalid` first. That name can never resolve, and the policy blocks it; the chart is then drawn from an in-page `blob:` URL. Nothing is sent anywhere.
+
+## Analytics
+Fundprint uses [Umami](https://umami.is), a privacy-friendly visit counter, to see how many people visit. It sets no cookies and collects no personal data.
+
+What is sent: a page view when you open a page (the page address and title, plus Umami's standard fields: screen size, browser language and the page you came from). Button clicks are not tracked.
+
+What is never sent: anything from your statement. The counter runs on the page itself, outside the part that reads your file, and has no access to it.
+
+To check: in DevTools → Network, the only requests to another site are the Umami script from `cloud.umami.is` and small requests to `gateway.umami.is`.
