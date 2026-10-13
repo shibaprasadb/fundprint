@@ -18,7 +18,7 @@ The app must show this line, word for word, above the upload box:
 Directly under it:
 
 > Fundprint runs entirely in your browser. Your statement is never uploaded to any server.
-> Don't take our word for it: the [code is open source](<repo link>), and you can open your browser's Network tab to check that nothing is sent.
+> Don't take our word for it: the [code is open source](<repo link>), and you can open your browser's Network tab to check that your file is never sent anywhere.
 
 ### What makes the promise true (hard rules, no exceptions)
 
@@ -28,9 +28,9 @@ Directly under it:
 | P2 | **Never write the uploaded file or anything derived from it to disk**, including the Pyodide in-memory filesystem. Work only with `io.BytesIO` and in-memory objects. | Nothing to leave behind. |
 | P3 | **Never cache user data.** No `st.cache_data` / `st.cache_resource` on any function that receives the PDF, the password, or anything parsed from them. Caching is allowed **only** for static public data (benchmark NAVs, scheme categories). | Streamlit caches can outlive a single run. |
 | P4 | **No browser storage of user data**: no `localStorage`, `sessionStorage`, IndexedDB or cookies holding anything from the statement. | Survives closing the tab otherwise. |
-| P5 | **No analytics, trackers, third-party fonts or external scripts.** Self-host the stlite/Pyodide assets so the page loads only from its own domain. | Keeps the Network tab clean and checkable. |
-| P6 | **Add a Content-Security-Policy `<meta>` tag** with `connect-src 'self'` (plus only what's strictly needed while assets aren't yet self-hosted). | The browser itself blocks any attempt to send data elsewhere, even by a buggy dependency. |
-| P7 | **No network calls at runtime except fetching the app's own static files** (`/data/*.json`, Python wheels). Never call mfapi.in, AMFI or anything else from the browser. | All public data is pre-fetched by a scheduled job (see §5). |
+| P5 | **No trackers, third-party fonts or external scripts, except anonymous Umami visit counts** (page views only, nothing from the statement; see PRIVACY.md). Self-host the stlite/Pyodide assets so the page loads only from its own domain. | Keeps the Network tab clean and checkable. |
+| P6 | **Add a Content-Security-Policy `<meta>` tag** with `connect-src 'self'` plus the Umami host, and nothing else. | The browser itself blocks any attempt to send data elsewhere, even by a buggy dependency. |
+| P7 | **No network calls at runtime except fetching the app's own static files** (`/data/*.json`, Python wheels) and the anonymous Umami counts. Never call mfapi.in, AMFI or anything else from the browser. | All public data is pre-fetched by a scheduled job (see §5). |
 | P8 | **Errors never show statement data.** Catch exceptions around parsing and analysis; show a plain message ("Couldn't read this statement. Is it a CAMS/KFintech detailed CAS?"). Set `client.showErrorDetails = false`. Never `print()` or log DataFrames, folio numbers, PAN, names or amounts. | Tracebacks and logs leak values. |
 | P9 | **The PDF password is used once to open the file and then discarded.** Use `st.text_input(type="password")`; don't keep it in session state. | |
 | P10 | **No real statements in the repo, ever.** `.gitignore` all `*.pdf`; use only synthetic test data; strip notebook outputs (`nbstripout` pre-commit hook). The reference notebook must be committed **with outputs cleared**. | The repo is public. |
@@ -38,11 +38,11 @@ Directly under it:
 ### How a user (or reviewer) can verify it
 
 Document this in the README and the in-app "How it works" section:
-1. Open DevTools → Network, upload a statement, and watch: no requests go out after the app has loaded.
+1. Open DevTools → Network, upload a statement, and watch: after the app has loaded, the only requests that leave the site are small ones to Umami.
 2. Read the CSP tag in the page source.
 3. Read the code: there is no server code to hide anything in.
 
-**Acceptance test for the promise:** with DevTools open, load the app, upload a synthetic CAS, and run every analysis. After the initial asset load, the Network tab shows **zero** requests. Make this a manual checklist item for every release, and an automated Playwright test if feasible (§9).
+**Acceptance test for the promise:** with DevTools open, load the app, upload a synthetic CAS, and run every analysis. After the app loads, **every** network request goes either to the app's own domain or to Umami (`cloud.umami.is` for the script, `gateway.umami.is` for the counts), and every Umami request is a plain page view with Umami's standard fields. Make this a manual checklist item for every release, and an automated Playwright test if feasible (§9).
 
 ---
 
@@ -311,7 +311,7 @@ All fixtures synthetic (P10). `scripts/make_sample.py` builds them.
 - Static check: no `st.cache_*` decorator on any function in `parse.py`, `lots.py`, `benchmark.py`, or app code that touches user data (a simple grep-based test).
 - Static check: no `localStorage`/`sessionStorage`/`indexedDB` in `web/`.
 - No-rupee check: render the Time in Market page with sample data (Streamlit `AppTest`) and assert that no text element, table cell or chart label contains `₹`, `Rs`, `INR`, `lakh`, `crore`, or any of the internal `invested`/`value` numbers.
-- Playwright (if feasible): load the deployed page, upload the synthetic CAS, run Time in Market, and assert no network requests after the initial load.
+- Playwright (if feasible): load the deployed page, upload the synthetic CAS, run Time in Market, and assert that every request goes to the app's own domain or to Umami, and that every Umami request is a plain page view.
 
 ---
 
