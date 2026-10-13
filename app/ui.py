@@ -129,15 +129,12 @@ def _form_image():
     )
 
 
-def come_back_note():
-    st.markdown("**Request it now and come back when the email arrives.** "
-                "Bookmark this page, or copy its link:")
-    st.code(APP_URL, language=None)
-
-
 def cas_checklist():
     """Four steps to request a Detailed statement from CAMS. Plain words: 'statement', not 'CAS'."""
-    st.markdown("**Don't have your statement yet? It takes about a minute to request.**")
+    st.subheader("Don't have your statement yet?")
+    st.markdown("It takes about a minute to request. **Request it now and come back when the email arrives.** "
+                "Bookmark this page, or copy its link:")
+    st.code(APP_URL, language=None)
 
     _step(1, "Open the CAMS statement page")
     st.link_button("Open CAMS statement page ↗", CAMS_URL)   # opens in a new tab

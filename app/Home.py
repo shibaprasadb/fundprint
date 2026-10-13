@@ -68,7 +68,6 @@ def main():
     if done:
         st.switch_page(RESULTS_PAGE)
 
-    ui.come_back_note()
     ui.cas_checklist()
 
     ui.footer(manifest)
