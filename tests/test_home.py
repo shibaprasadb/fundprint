@@ -26,12 +26,11 @@ def test_order_is_promise_then_sample_then_own_statement(home):
     text = {i: getattr(e, "value", "") for i, e in enumerate(home.main)}
     promise = next(i for i, v in text.items() if "Nothing is stored. Your file is read and dropped" in str(v))
     sample = kinds.index("button")
-    own = next(i for i, e in enumerate(home.main) if e.type == "header")
+    own = next(i for i, v in text.items() if "Use your own statement" in str(v))
     assert promise < sample < own
     assert home.button[0].label == "See it with sample data"
     assert home.button[0].proto.type == "primary"
     assert "A made-up portfolio, so you can see what Fundprint shows before using your own." in [c.value for c in home.caption]
-    assert home.header[0].value == "Use your own statement"
 
 
 def test_upload_box_sits_above_the_note_and_checklist(home):
