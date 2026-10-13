@@ -51,6 +51,8 @@ CSS = """<style>
 button[kind="primary"]{padding:0.9rem 2rem;min-height:3.5rem}
 button[kind="primary"] p{font-size:1.2rem}
 h3[id^="step-"]{font-size:1.25rem}
+.stLinkButton a{background:#D9F2DE;border-color:#7CC98B;color:#14532D}
+.stLinkButton a:hover{background:#C6EBCD;border-color:#4FB365;color:#14532D}
 @media (max-width: 640px){
   [data-testid="stElementContainer"]:has(.stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]){width:100% !important}
   .stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]{width:100% !important}
