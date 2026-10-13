@@ -50,7 +50,7 @@ def main():
         st.switch_page(RESULTS_PAGE)
     st.caption("A made-up portfolio, so you can see what Fundprint shows before using your own.")
 
-    st.header("Use your own statement")
+    ui.section_bar("Use your own statement")
 
     st.subheader("Already have your statement?")
     file = st.file_uploader("Your statement (PDF)", type="pdf")

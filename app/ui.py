@@ -66,16 +66,26 @@ def sidebar_note():
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 
 
-def header_bar():
-    """The name and tagline in an Oxford Blue bar."""
+OXFORD_BLUE = "#002147"
+
+
+def _bar(html):
     st.markdown(
-        '<div style="background:#002147;color:#FFFFFF;padding:1.2rem 1.5rem;border-radius:0.5rem;'
-        'margin-bottom:1rem">'
-        '<div style="font-size:2.2rem;font-weight:700;line-height:1.2">Fundprint (Beta)</div>'
-        '<div style="font-style:italic;margin-top:0.3rem">A CASual look at your mutual fund statement.</div>'
-        '</div>',
+        f'<div style="background:{OXFORD_BLUE};color:#FFFFFF;padding:1.2rem 1.5rem;'
+        f'border-radius:0.5rem;margin-bottom:1rem">{html}</div>',
         unsafe_allow_html=True,
     )
+
+
+def header_bar():
+    """The name and tagline in an Oxford Blue bar."""
+    _bar('<div style="font-size:2.2rem;font-weight:700;line-height:1.2">Fundprint (Beta)</div>'
+         '<div style="font-style:italic;margin-top:0.3rem">A CASual look at your mutual fund statement.</div>')
+
+
+def section_bar(title):
+    """A section heading in the same Oxford Blue bar."""
+    _bar(f'<div style="font-size:1.6rem;font-weight:700;line-height:1.2">{title}</div>')
 
 
 def promise_box():
@@ -120,7 +130,7 @@ def _form_image():
 
 
 def come_back_note():
-    st.markdown("💡 **Request it now and come back when the email arrives.** "
+    st.markdown("**Request it now and come back when the email arrives.** "
                 "Bookmark this page, or copy its link:")
     st.code(APP_URL, language=None)
 
@@ -156,11 +166,13 @@ def cas_checklist():
 
 
 def footer(manifest):
-    st.divider()
-    st.caption(DISCLAIMER)
-    st.caption(
-        f"Benchmark data as of {manifest['benchmark']['latest_date']} · "
-        f"[Source code]({REPO_URL}) · Built by [shibaprasadb.com](https://shibaprasadb.com)"
+    link = 'style="color:#FFFFFF;text-decoration:underline"'
+    _bar(
+        f'<div style="font-size:0.85rem">{DISCLAIMER}</div>'
+        f'<div style="font-size:0.85rem;margin-top:0.5rem">'
+        f'Benchmark data as of {manifest["benchmark"]["latest_date"]} · '
+        f'<a href="{REPO_URL}" {link}>Source code</a> · '
+        f'Built by <a href="https://shibaprasadb.com" {link}>shibaprasadb.com</a></div>'
     )
 
 
