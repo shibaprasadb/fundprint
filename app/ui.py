@@ -66,6 +66,18 @@ def sidebar_note():
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 
 
+def header_bar():
+    """The name and tagline in an Oxford Blue bar."""
+    st.markdown(
+        '<div style="background:#002147;color:#FFFFFF;padding:1.2rem 1.5rem;border-radius:0.5rem;'
+        'margin-bottom:1rem">'
+        '<div style="font-size:2.2rem;font-weight:700;line-height:1.2">Fundprint (Beta)</div>'
+        '<div style="font-style:italic;margin-top:0.3rem">A CASual look at your mutual fund statement.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def promise_box():
     """The privacy promise in a light red box, so it is the first thing people notice."""
     st.markdown(

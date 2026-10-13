@@ -9,6 +9,7 @@ from fundprint.benchmark import compare, load_bench
 from fundprint.charts import allocation_chart, facet_chart
 from fundprint.classify import ASSET_CLASSES, UNCLASSIFIED, classify_isin
 from fundprint.lots import held_lots
+from fundprint.xirr import xirr
 
 st.set_page_config(page_title="Fundprint · Time in Market", page_icon="🔒", layout="wide")
 
@@ -75,6 +76,12 @@ def main():
         fig.savefig(buf, format="png", dpi=180, facecolor=fig.get_facecolor())
         return buf.getvalue()
 
+
+    active_xirr = 100 * xirr(cf.date, cf.amount)
+    if pd.isna(active_xirr):
+        st.markdown(f"Your active XIRR for {label.lower()} could not be calculated.")
+    else:
+        st.markdown(f"Your active XIRR for {label.lower()} is **{active_xirr:.1f}%**.")
 
     alloc = allocation_chart(table)
     st.pyplot(alloc)
