@@ -40,7 +40,7 @@ def test_upload_box_sits_above_the_note_and_checklist(home):
 
 
 def test_checklist_has_four_steps(home):
-    assert [s.value for s in home.subheader[1:]] == [
+    assert [s.value for s in home.subheader[2:]] == [
         "Step 1. Open the CAMS statement page", "Step 2. Fill in the form like this",
         "Step 3. Check your email", "Step 4. Come back and upload it",
     ]
@@ -82,4 +82,4 @@ def test_screenshot_slot_is_skipped_cleanly_without_the_file(monkeypatch):
     at.run()
     assert not at.exception and not at.error
     assert not any(ui.FORM_IMAGE_ALT in m.value for m in at.markdown)
-    assert len(at.subheader) == 5   # the checklist still shows all four steps
+    assert len(at.subheader) == 6   # the checklist still shows all four steps
