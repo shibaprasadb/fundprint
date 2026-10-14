@@ -28,12 +28,12 @@ Directly under it:
 | P2 | **Never write the uploaded file or anything derived from it to disk**, including the Pyodide in-memory filesystem. Work only with `io.BytesIO` and in-memory objects. | Nothing to leave behind. |
 | P3 | **Never cache user data.** No `st.cache_data` / `st.cache_resource` on any function that receives the PDF, the password, or anything parsed from them. Caching is allowed **only** for static public data (benchmark NAVs, scheme categories). | Streamlit caches can outlive a single run. |
 | P4 | **No browser storage of user data**: no `localStorage`, `sessionStorage`, IndexedDB or cookies holding anything from the statement. | Survives closing the tab otherwise. |
-| P5 | **No trackers, third-party fonts or external scripts, except anonymous Umami visit counts** (page views only, nothing from the statement; see PRIVACY.md). Self-host the stlite/Pyodide assets so the page loads only from its own domain. | Keeps the Network tab clean and checkable. |
+| P5 | **No trackers, third-party fonts or external scripts.** The only outside request is the anonymous Umami page-view count, sent by a fixed copy of Umami's script kept in the repo (`web/umami.js`) and served from our own domain (page views only, nothing from the statement; see PRIVACY.md). Self-host the stlite/Pyodide assets so the page loads only from its own domain. | Keeps the Network tab clean and checkable. |
 | P6 | **Add a Content-Security-Policy `<meta>` tag** with `connect-src 'self'` plus the Umami host, and nothing else. | The browser itself blocks any attempt to send data elsewhere, even by a buggy dependency. |
 | P7 | **No network calls at runtime except fetching the app's own static files** (`/data/*.json`, Python wheels) and the anonymous Umami counts. Never call mfapi.in, AMFI or anything else from the browser. | All public data is pre-fetched by a scheduled job (see §5). |
 | P8 | **Errors never show statement data.** Catch exceptions around parsing and analysis; show a plain message ("Couldn't read this statement. Is it a CAMS/KFintech detailed CAS?"). Set `client.showErrorDetails = false`. Never `print()` or log DataFrames, folio numbers, PAN, names or amounts. | Tracebacks and logs leak values. |
 | P9 | **The PDF password is used once to open the file and then discarded.** Use `st.text_input(type="password")`; don't keep it in session state. | |
-| P10 | **No real statements in the repo, ever.** `.gitignore` all `*.pdf`; use only synthetic test data; strip notebook outputs (`nbstripout` pre-commit hook). The reference notebook must be committed **with outputs cleared**. | The repo is public. |
+| P10 | **No real statements in the repo, ever.** `.gitignore` all `*.pdf`; use only synthetic test data; notebook outputs are stripped when a notebook is staged (`nbstripout` git filter, set up once per clone with `nbstripout --install`; `.gitattributes` is in the repo), and a test fails if any committed notebook has outputs. The reference notebook must be committed **with outputs cleared**. | The repo is public. |
 
 ### How a user (or reviewer) can verify it
 
@@ -42,7 +42,7 @@ Document this in the README and the in-app "How it works" section:
 2. Read the CSP tag in the page source.
 3. Read the code: there is no server code to hide anything in.
 
-**Acceptance test for the promise:** with DevTools open, load the app, upload a synthetic CAS, and run every analysis. After the app loads, **every** network request goes either to the app's own domain or to Umami (`cloud.umami.is` for the script, `gateway.umami.is` for the counts), and every Umami request is a plain page view with Umami's standard fields. Make this a manual checklist item for every release, and an automated Playwright test if feasible (§9).
+**Acceptance test for the promise:** with DevTools open, load the app, upload a synthetic CAS, and run every analysis. After the app loads, **every** network request goes either to the app's own domain or to Umami (`gateway.umami.is` for the counts; the script itself is served from our own domain), and every Umami request is a plain page view with Umami's standard fields. Make this a manual checklist item for every release, and an automated Playwright test if feasible (§9).
 
 ---
 

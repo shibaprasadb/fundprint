@@ -31,7 +31,7 @@ def main():
         out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, out)
     (DIST / "app-manifest.json").write_text(json.dumps({"files": [rel for _, rel in APP_FILES]}))
-    for name in ("index.html", "boot.js"):
+    for name in ("index.html", "boot.js", "umami.js"):
         shutil.copy(ROOT / "web" / name, DIST / name)
     vendor = ROOT / "web/vendor"
     if vendor.exists():

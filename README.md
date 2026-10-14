@@ -11,7 +11,9 @@ Indian DIY mutual fund investors get one portfolio XIRR from their fund app. Tha
 Fundprint runs entirely in your browser. Your statement is never uploaded to any server. See [PRIVACY.md](PRIVACY.md) for the rules and how to check them yourself: open DevTools → Network, upload a statement, and watch that your file is never sent anywhere.
 
 ## Analytics
-The live page counts anonymous visits with [Umami](https://umami.is), to see how many people use it. No cookies, no personal data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the Umami script from `cloud.umami.is` and small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
+The live page counts anonymous visits with [Umami](https://umami.is), to see how many people use it. No cookies, no personal data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
+
+`web/umami.js` is an unedited copy of `https://cloud.umami.is/script.js`, copied on 14 Oct 2026. Umami is MIT licensed. To update it: download the new file, read it in full (what it sends and where), replace the copy, and update the hash in `tests/test_privacy.py`.
 
 ## What it shows
 Per holding-period bucket (<1Y, 1-3Y, 3-5Y, 5Y+): share of your money, XIRR, absolute return, and the gap to the Nifty 50. Percentages only, no rupee amounts, so every screen is safe to screenshot.
@@ -27,6 +29,7 @@ The reference notebook is in [notebooks/xirr_analysis.ipynb](notebooks/xirr_anal
 ## Run it locally
 ```bash
 pip install -r requirements-dev.txt
+nbstripout --install              # once after cloning: clears notebook outputs when you commit
 python scripts/refresh_data.py     # downloads the public benchmark and category data
 streamlit run app/Home.py
 pytest
@@ -34,8 +37,11 @@ pytest
 
 ## How it's deployed
 The app runs in the browser with [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to run client-side), as plain static files.
-- `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`, so the app itself loads nothing from other sites (the only outside script is the Umami visit counter).
+- `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`, so the page loads no outside script at all (the Umami visit counter is a fixed copy in `web/umami.js`).
 - `scripts/build_web.py` assembles the site in `dist/`.
+- Everything the build downloads is pinned to an exact version and checked against a SHA-256 hash written in `scripts/fetch_vendor.py`. On a mismatch the script deletes the file and stops. To move to a new version, change the version and hash there, and compare the hash with what the publisher lists.
+- The CI jobs install from `requirements-ci.txt`, a full list of exact versions and hashes (`pip install --require-hashes`). `requirements.txt` and `requirements-dev.txt` stay the short files you edit; make the lock again with the command at the top of `requirements-ci.txt`, read what changed, and open a pull request.
+- The deploy has two jobs: `build` (installs, tests, downloads, builds; no secrets) and `deploy` (holds the deploy key; runs no Python and no script from this repo). GitHub Actions are pinned to full commit IDs.
 - `.github/workflows/deploy.yml` pushes `dist/` into a separate `lab` repo (published at `lab.shibaprasadb.com/fundprint`). GitHub Pages stays OFF in this repo.
 - `.github/workflows/refresh-data.yml` refreshes the public benchmark and category data every day.
 
