@@ -102,7 +102,7 @@ def promise_box():
 
 def sample_banner():
     """Shown on the analysis pages while the made-up portfolio is in use."""
-    st.info("🧪 **You're looking at a sample portfolio (made-up data).**")
+    st.info("**You're looking at a sample portfolio (made-up data).**")
     st.page_link("Home.py", label="Use your own statement →")
 
 
