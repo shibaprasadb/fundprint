@@ -13,12 +13,14 @@ from .parse import ParsedCas
 FUNDS = [
     ("Sample Flexi Cap Fund - Direct Growth", "INF000SAMPLE1", 0.14, 0.16, 6.0,
      [(2000, 100000.0), (700, 75000.0)], [(1100, 0.10), (200, 0.05)]),
-    ("Sample Nifty 50 Index Fund - Direct Growth", "INF000SAMPLE2", 0.11, 0.14, 4.0,
+    ("Sample Nifty 50 Index Fund - Direct Growth", "INF000SAMPLE2", 0.02, 0.14, 4.0,
      [(1500, 50000.0), (400, 50000.0)], [(250, 0.08)]),
-    ("Sample Small Cap Fund - Direct Growth", "INF000SAMPLE3", 0.18, 0.24, 2.5,
+    ("Sample Small Cap Fund - Direct Growth", "INF000SAMPLE3", 0.06, 0.24, 2.5,
      [(300, 40000.0)], []),
     ("Sample Short Duration Debt Fund - Direct Growth", "INF000SAMPLE4", 0.07, 0.01, 0,
      [(1300, 150000.0), (600, 100000.0), (90, 50000.0)], [(150, 0.15)]),
+    ("Sample Gold ETF Fund of Fund - Direct Growth", "INF000SAMPLE5", 0.10, 0.15, 0,
+     [(1000, 60000.0), (450, 40000.0)], []),
 ]
 SIP_AMOUNT = 5000.0
 
@@ -59,8 +61,9 @@ def sample_cas(today=None, seed=7):
 def sample_categories():
     """Matching rows for the sample funds, same shape as data/scheme_categories.json."""
     cats = ["Equity Scheme - Flexi Cap Fund", "Other Scheme - Index Funds",
-            "Equity Scheme - Small Cap Fund", "Debt Scheme - Short Duration Fund"]
-    classes = ["Equity", "Equity", "Equity", "Debt"]
+            "Equity Scheme - Small Cap Fund", "Debt Scheme - Short Duration Fund",
+            "Other Scheme - FoF Domestic"]
+    classes = ["Equity", "Equity", "Equity", "Debt", "Commodity"]
     return {isin: {"amfi_code": str(900000 + i), "scheme_name": name,
                    "amfi_category": f"Open Ended Schemes({cats[i]})", "asset_class": classes[i]}
             for i, (name, isin, *_) in enumerate(FUNDS)}
