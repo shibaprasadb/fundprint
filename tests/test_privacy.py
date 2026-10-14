@@ -82,3 +82,15 @@ def test_notebooks_have_no_outputs():
                 f"{rel} cell {i} has outputs. Clear all outputs in Jupyter, or run `nbstripout {rel}`, "
                 "then run the tests again."
             )
+
+
+def test_feedback_link_is_plain_and_counted_once():
+    """The feedback form opens in a new tab; only a bare click:feedback event is allowed to Umami."""
+    url = "https://tally.so/r/2EqQGg"
+    html = (ROOT / "web/index.html").read_text()
+    assert f'href="{url}" target="_blank" rel="noopener noreferrer"' in html
+    assert "<iframe" not in html and "tally.so" not in html.split("Content-Security-Policy")[1].split(">")[0]
+    js = (ROOT / "web/feedback.js").read_text()
+    assert 'ALLOWED_EVENTS = ["click:feedback"]' in js
+    assert 'data-before-send="fundprintBeforeSend"' in html
+    assert f'href="{url}"' in (ROOT / "app/ui.py").read_text() or url in (ROOT / "app/ui.py").read_text()

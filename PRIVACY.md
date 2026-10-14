@@ -29,7 +29,7 @@ One note you may see in the console: the charts ask for an image at `stlite.inva
 ## Analytics
 Fundprint uses [Umami](https://umami.is), a privacy-friendly visit counter, to see how many people visit. It sets no cookies and collects no personal data.
 
-What is sent: a page view when you open a page (the page address and title, plus Umami's standard fields: screen size, browser language and the page you came from). Button clicks are not tracked.
+What is sent: a page view when you open a page (the page address and title, plus Umami's standard fields: screen size, browser language and the page you came from). The only click counted is on the Feedback link, as a bare `click:feedback` event with no details; the link opens the feedback form in a new tab and Fundprint sends nothing to it.
 
 What is never sent: anything from your statement. The counter is a small script kept in this repository (`web/umami.js`) and served from this site, so it cannot change unless this code changes. Like any script on the page it runs alongside the upload box, which is why we keep a fixed copy that anyone can read, and do not load it from another site.
 
