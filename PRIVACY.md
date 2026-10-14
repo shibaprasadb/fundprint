@@ -9,7 +9,7 @@ Fundprint runs entirely in your browser. Your statement is never uploaded to any
 - The file is handled in memory only. It is never written to disk.
 - No caching of anything from your statement (caching is used only for public benchmark data).
 - No `localStorage`, `sessionStorage`, IndexedDB or cookies holding statement data.
-- No trackers, third-party fonts or external scripts, with one exception: anonymous visit counts with Umami (see Analytics below).
+- No scripts, fonts or trackers are loaded from other sites. Anonymous visit counts are sent to Umami by a small script served from this site (see Analytics below).
 - A Content-Security-Policy tag stops the page from sending data anywhere except this site and Umami.
 - No network calls while you use the app, other than loading its own files and those anonymous counts.
 - Error messages never show statement data.
@@ -31,6 +31,6 @@ Fundprint uses [Umami](https://umami.is), a privacy-friendly visit counter, to s
 
 What is sent: a page view when you open a page (the page address and title, plus Umami's standard fields: screen size, browser language and the page you came from). Button clicks are not tracked.
 
-What is never sent: anything from your statement. The counter runs on the page itself, outside the part that reads your file, and has no access to it.
+What is never sent: anything from your statement. The counter is a small script kept in this repository (`web/umami.js`) and served from this site, so it cannot change unless this code changes. Like any script on the page it runs alongside the upload box, which is why we keep a fixed copy that anyone can read, and do not load it from another site.
 
-To check: in DevTools → Network, the only requests to another site are the Umami script from `cloud.umami.is` and small requests to `gateway.umami.is`.
+To check: in DevTools → Network, the only requests to another site are the small page-view requests to `gateway.umami.is`.

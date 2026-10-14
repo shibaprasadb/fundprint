@@ -11,7 +11,9 @@ Indian DIY mutual fund investors get one portfolio XIRR from their fund app. Tha
 Fundprint runs entirely in your browser. Your statement is never uploaded to any server. See [PRIVACY.md](PRIVACY.md) for the rules and how to check them yourself: open DevTools → Network, upload a statement, and watch that your file is never sent anywhere.
 
 ## Analytics
-The live page counts anonymous visits with [Umami](https://umami.is), to see how many people use it. No cookies, no personal data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the Umami script from `cloud.umami.is` and small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
+The live page counts anonymous visits with [Umami](https://umami.is), to see how many people use it. No cookies, no personal data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
+
+`web/umami.js` is an unedited copy of `https://cloud.umami.is/script.js`, copied on 14 Oct 2026. Umami is MIT licensed. To update it: download the new file, read it in full (what it sends and where), replace the copy, and update the hash in `tests/test_privacy.py`.
 
 ## What it shows
 Per holding-period bucket (<1Y, 1-3Y, 3-5Y, 5Y+): share of your money, XIRR, absolute return, and the gap to the Nifty 50. Percentages only, no rupee amounts, so every screen is safe to screenshot.
@@ -34,7 +36,7 @@ pytest
 
 ## How it's deployed
 The app runs in the browser with [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to run client-side), as plain static files.
-- `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`, so the app itself loads nothing from other sites (the only outside script is the Umami visit counter).
+- `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`, so the page loads no outside script at all (the Umami visit counter is a fixed copy in `web/umami.js`).
 - `scripts/build_web.py` assembles the site in `dist/`.
 - `.github/workflows/deploy.yml` pushes `dist/` into a separate `lab` repo (published at `lab.shibaprasadb.com/fundprint`). GitHub Pages stays OFF in this repo.
 - `.github/workflows/refresh-data.yml` refreshes the public benchmark and category data every day.

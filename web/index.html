@@ -8,9 +8,9 @@
   <!-- The browser itself blocks any request to another site, even from a buggy dependency (rule P6).
        'unsafe-eval', 'wasm-unsafe-eval' and data: scripts are needed by Python-in-the-browser (its worker
        starts from a data: URL). What protects your file is connect-src: requests can only go to this site
-       or to Umami, which counts anonymous visits. Umami Cloud uses two addresses: cloud.umami.is
-       serves its script, gateway.umami.is receives the counts. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cloud.umami.is; worker-src 'self' blob: data:; connect-src 'self' blob: data: https://gateway.umami.is; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+       or to Umami, which counts anonymous visits. The counter script is a fixed copy kept in this repo
+       (umami.js), so no script is loaded from another site. gateway.umami.is receives the counts. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data: https://gateway.umami.is; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <link rel="stylesheet" href="./vendor/stlite/stlite.css">
   <style>
     #loading-note { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 1000000;
@@ -23,7 +23,7 @@
     @keyframes loading-spin { to { transform: rotate(360deg); } }
   </style>
   <!-- Umami Analytics: counts visits, nothing else -->
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="2e67cd5c-f499-4fba-a139-481c5adb30c4"></script>
+  <script defer src="./umami.js" data-website-id="2e67cd5c-f499-4fba-a139-481c5adb30c4" data-domains="lab.shibaprasadb.com"></script>
 </head>
 <body>
   <div id="root"></div>

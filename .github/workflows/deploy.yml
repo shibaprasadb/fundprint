@@ -21,7 +21,7 @@ jobs:
       - run: python scripts/build_web.py
       - name: Check the build has no outside links
         run: |
-          ! grep -rEl "https?://(cdn|unpkg|fonts|www\.google|files\.pythonhosted|pypi)" dist/index.html dist/boot.js dist/app-manifest.json
+          ! grep -rEl "https?://(cdn|cloud\.umami|unpkg|fonts|www\.google|files\.pythonhosted|pypi)" dist/index.html dist/boot.js dist/app-manifest.json
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/lab
