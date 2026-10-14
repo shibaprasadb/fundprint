@@ -1,5 +1,5 @@
 """Two whole-portfolio views: each equity fund against its Nifty 50 twin, and
-when the money went in against the Nifty 50's 52-week highs.
+how regular the investing has been.
 
 Both return percentages and labels only. Cost is used inside these functions
 to weight things and is never returned as an amount.
@@ -12,20 +12,8 @@ import pandas as pd
 
 from .xirr import xirr
 
-NEAR_HIGH_FRACTION = 0.95   # "near a high" = within 5% of the 52-week high
-HIGH_WINDOW_DAYS = 365      # the 52-week window, in calendar days
 YOUNG_YEARS = 1.0           # average age under this: read absolute return, not XIRR
 MAX_FUNDS = 12              # most funds shown in the twin chart
-OTHER_MIN_SHARE = 5.0       # "Other" is listed only when it is at least this % of the money
-TITLE_BAND_PP = 5.0         # a gap this close to the market counts as "close to random"
-
-CLASS_ORDER = ["Equity", "Debt", "Commodity", "Other"]
-
-
-def timing_class(asset_class):
-    """Equity, Debt and Commodity stay as they are. Hybrid, Other and Unclassified become Other."""
-    return asset_class if asset_class in CLASS_ORDER[:3] else "Other"
-
 
 # ---- A. Which funds are ahead of their index twin? ----
 
@@ -94,62 +82,101 @@ def gaps_title(t):
     return f"{int((t.gap_pp > 0).sum())} of {len(t)} equity funds are ahead of their Nifty 50 twin"
 
 
-# ---- B. When did you buy? ----
+# ---- B. How regular is your investing? ----
 
-def near_high(bench):
-    """True on each benchmark date where the NAV is within 5% of its 52-week high."""
-    nav = bench.set_index("date").nav
-    return nav >= NEAR_HIGH_FRACTION * nav.rolling(f"{HIGH_WINDOW_DAYS}D").max()
+PERIODICITY_GROUP = "fund"        # "fund": usual day worked out per fund. "all": one usual day for everything.
+PERIODICITY_WINDOW_DAYS = 5       # a purchase is periodic within this many days of the usual day
+PERIODICITY_MIN_PURCHASES = 3     # a group needs this many purchases in its zone to count as a pattern
+MAX_USUAL_DAYS = 3                # usual days named in the subtitle before "and others"
+MONTH_DAYS = 31                   # the month is treated as a circle of 31 days
 
-
-class Timing(NamedTuple):
-    purchases: pd.DataFrame     # date, nav, share (fraction of all money), cls, near
-    near_pct: dict              # class -> % of that class's money bought near a high
-    all_pct: float              # same, for all money together
-    classes: list               # classes to list in the headline and legend, in order
-    baseline_pct: float         # % of trading days near a high, first to last purchase
-    levels: pd.DataFrame        # benchmark nav and near-high flag per date, indexed by date
+PURCHASE_KINDS = ("PURCHASE", "PURCHASE_SIP")
 
 
-def purchase_timing(cf, bench):
-    """Where each held purchase sits against the Nifty 50's 52-week highs.
+def counted_purchases(txns):
+    """Purchases the investor made, still counted if sold since.
 
-    `cf` is held_lots() output with an `asset_class` column, all funds.
-    Returns None when no purchase falls inside the benchmark history.
+    Reinvested dividends, switch-ins, STP transfers and rows without units are left out,
+    and so is a purchase together with the reversal that cancelled it.
     """
-    buys = cf[(cf.amount < 0) & (cf.date >= bench.date.min())].astype({"date": "datetime64[ns]"})
-    if buys.empty:
+    t = txns[txns.units.gt(0) & txns.kind.isin(PURCHASE_KINDS) | (txns.kind == "REVERSAL")]
+    keep = []
+    for _, g in t.groupby(["folio", "scheme"], sort=False):
+        g = g.sort_values("date", kind="stable")
+        buys = g[g.kind.isin(PURCHASE_KINDS)]
+        for _, r in g[g.kind == "REVERSAL"].iterrows():
+            match = buys[(buys.date <= r.date) & ((buys.units + r.units).abs() < 0.001)]
+            if len(match):
+                buys = buys.drop(match.index[-1])
+        keep.append(buys)
+    if not keep:
+        return txns.iloc[0:0]
+    return pd.concat(keep).sort_values("date", kind="stable")
+
+
+def day_distance(d, m):
+    """Days between two days of the month, counting round the month end: 30th and 2nd are 3 apart."""
+    gap = abs(d - m)
+    return min(gap, MONTH_DAYS - gap)
+
+
+def _usual_day(days):
+    """The most common day of the month. Ties go to the day whose zone holds most purchases, then the earliest."""
+    counts = days.value_counts()
+    tied = counts[counts == counts.max()].index
+    cover = {m: int((days.map(lambda d: day_distance(d, m)) <= PERIODICITY_WINDOW_DAYS).sum()) for m in tied}
+    return min(tied, key=lambda m: (-cover[m], m))
+
+
+class Periodicity(NamedTuple):
+    purchases: pd.DataFrame   # date, nav, share (fraction of all money), periodic
+    pct: int                  # % of purchases (by count) that were periodic
+    usual_days: list          # day of month, most purchases covered first
+    levels: pd.DataFrame      # benchmark nav per date, indexed by date
+
+
+def periodicity(txns, bench):
+    """Mark each purchase periodic or one-off. None when there are no purchases inside the benchmark history."""
+    p = counted_purchases(txns)
+    p = p[p.date >= bench.date.min()]
+    if p.empty:
         return None
-    near = near_high(bench)
-    levels = pd.DataFrame({"date": near.index, "nav": bench.nav.to_numpy(), "near": near.to_numpy()})
-    p = pd.merge_asof(buys.sort_values("date"), levels, on="date")
-    p = pd.DataFrame({"date": p.date, "nav": p.nav, "near": p.near, "cost": -p.amount,
-                      "cls": p.asset_class.map(timing_class)})
-    p["share"] = p.cost / p.cost.sum()
+    p = p.assign(day=p.date.dt.day, group=p["isin"].fillna(p.scheme) if PERIODICITY_GROUP == "fund" else "all",
+                 periodic=False)
+    covered = {}   # usual day -> purchases it covers
+    for _, g in p.groupby("group", sort=False):
+        usual = _usual_day(g.day)
+        in_zone = g.day.map(lambda d: day_distance(d, usual)) <= PERIODICITY_WINDOW_DAYS
+        if in_zone.sum() >= PERIODICITY_MIN_PURCHASES:
+            p.loc[g.index[in_zone], "periodic"] = True
+            covered[usual] = covered.get(usual, 0) + int(in_zone.sum())
 
-    def pct(x):
-        return 100 * x.cost[x.near].sum() / x.cost.sum()
-
-    near_pct = {c: pct(x) for c, x in p.groupby("cls")}
-    money = p.groupby("cls").share.sum() * 100
-    classes = [c for c in CLASS_ORDER if c in near_pct and (c != "Other" or money[c] >= OTHER_MIN_SHARE)]
-    window = near.loc[p.date.min():p.date.max()]
-    baseline = 100 * window.mean() if len(window) else float("nan")
-    return Timing(p.drop(columns="cost"), near_pct, pct(p), classes, baseline, levels.set_index("date"))
-
-
-def headline_figure(t):
-    """The class the title is judged on: Equity, or all money when there is no equity."""
-    return t.near_pct.get("Equity", t.all_pct)
+    levels = bench[["date", "nav"]]
+    p = pd.merge_asof(p.astype({"date": "datetime64[ns]"}).sort_values("date"), levels, on="date")
+    p["share"] = p.amount / p.amount.sum()
+    usual_days = sorted(covered, key=lambda d: (-covered[d], d))
+    return Periodicity(p[["date", "nav", "share", "periodic"]], int(round(100 * p.periodic.mean())),
+                       usual_days, levels.set_index("date"))
 
 
-def timing_title(t):
-    return title_for(headline_figure(t) - t.baseline_pct)
+def ordinal(n):
+    suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"the {n}{suffix}"
 
 
-def title_for(diff):
-    if diff > TITLE_BAND_PP:
-        return "More of your money went in near market highs than random timing would suggest"
-    if diff < -TITLE_BAND_PP:
-        return "Less of your money went in near market highs than random timing would suggest"
-    return "Your buying looks close to random timing"
+def periodicity_title(pr):
+    if not pr.usual_days:
+        return "Your investments don't follow a regular monthly pattern"
+    return f"{pr.pct}% of your investments followed a regular pattern"
+
+
+def periodicity_subtitle(pr):
+    """Two short lines: what periodic means, then the usual day(s). Nothing else."""
+    if not pr.usual_days:
+        return ""
+    line = f"Made within {PERIODICITY_WINDOW_DAYS} days of your usual investing day for that fund."
+    shown = [ordinal(d) for d in pr.usual_days[:MAX_USUAL_DAYS]]
+    if len(pr.usual_days) == 1:
+        return f"{line}\nYour usual day: {shown[0]}."
+    more = " and others" if len(pr.usual_days) > MAX_USUAL_DAYS else ""
+    return f"{line}\nYour usual days: {', '.join(shown)}{more}."
