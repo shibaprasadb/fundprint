@@ -34,9 +34,9 @@ def main():
 
     ui.header_bar()
     st.markdown(
-        "Fundprint shows how your investments are doing based on how long you have held them, "
-        "and compares each holding period with what the same money would have earned in a "
-        "Nifty 50 index fund."
+        "Fundprint goes one level deeper than a single XIRR number. It breaks down your mutual fund "
+        "investments in different ways, such as how long you have held each purchase and how "
+        "that compares with a Nifty 50 index fund, so you can see what is really driving your returns."
     )
 
     ui.promise_box()
