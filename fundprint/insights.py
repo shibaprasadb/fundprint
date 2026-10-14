@@ -129,7 +129,7 @@ def _usual_day(days):
 
 
 class Periodicity(NamedTuple):
-    purchases: pd.DataFrame   # date, nav, share (fraction of all money), periodic
+    purchases: pd.DataFrame   # date, nav, periodic
     pct: int                  # % of purchases (by count) that were periodic
     usual_days: list          # day of month, most purchases covered first
     levels: pd.DataFrame      # benchmark nav per date, indexed by date
@@ -153,9 +153,8 @@ def periodicity(txns, bench):
 
     levels = bench[["date", "nav"]]
     p = pd.merge_asof(p.astype({"date": "datetime64[ns]"}).sort_values("date"), levels, on="date")
-    p["share"] = p.amount / p.amount.sum()
     usual_days = sorted(covered, key=lambda d: (-covered[d], d))
-    return Periodicity(p[["date", "nav", "share", "periodic"]], int(round(100 * p.periodic.mean())),
+    return Periodicity(p[["date", "nav", "periodic"]], int(round(100 * p.periodic.mean())),
                        usual_days, levels.set_index("date"))
 
 
@@ -166,8 +165,8 @@ def ordinal(n):
 
 def periodicity_title(pr):
     if not pr.usual_days:
-        return "Your investments don't follow a regular monthly pattern"
-    return f"{pr.pct}% of your investments followed a regular pattern"
+        return "Your transactions don't follow a regular monthly pattern"
+    return f"{pr.pct}% of your transactions followed a regular pattern"
 
 
 def periodicity_subtitle(pr):
