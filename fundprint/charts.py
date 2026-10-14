@@ -167,7 +167,7 @@ def gaps_chart(t):
 
 
 def periodicity_chart(pr, as_of):
-    """Nifty 50 NAV over the years, with a dot for every purchase: periodic (filled) or one-off (hollow)."""
+    """Nifty 50 NAV over the years, with a dot for every purchase: periodic (red) or one-off (blue)."""
     from matplotlib.lines import Line2D
     from .insights import periodicity_subtitle, periodicity_title
 
@@ -183,7 +183,7 @@ def periodicity_chart(pr, as_of):
             if periodic:
                 ax.scatter(g.date, g.nav, s=28, color=ACCENT, alpha=0.5, linewidths=0, zorder=3)
             else:
-                ax.scatter(g.date, g.nav, s=28, facecolors="none", edgecolors=MUTED, linewidths=0.9, zorder=3)
+                ax.scatter(g.date, g.nav, s=28, color=INDIA, alpha=0.5, linewidths=0, zorder=3)
         ax.set_ylabel("Nifty 50 index fund NAV", color=DARK, fontsize=9)
         ax.tick_params(length=0, colors=DARK, labelsize=9)
         ax.grid(axis="y", color=PANEL, lw=1.0)
@@ -192,7 +192,7 @@ def periodicity_chart(pr, as_of):
             s.set_visible(False)
 
         handles = [Line2D([], [], marker="o", ls="", color=ACCENT, alpha=0.6, ms=8, label="Periodic"),
-                   Line2D([], [], marker="o", ls="", mfc="none", mec=MUTED, ms=8, label="One-off")]
+                   Line2D([], [], marker="o", ls="", color=INDIA, alpha=0.6, ms=8, label="One-off")]
         ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(handles),
                   frameon=False, fontsize=8, labelcolor=DARK, handletextpad=0.2, columnspacing=1.1)
 
