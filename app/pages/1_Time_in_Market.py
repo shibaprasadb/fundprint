@@ -6,18 +6,18 @@ import streamlit as st
 
 import ui
 from fundprint.benchmark import compare, load_bench
-from fundprint.charts import allocation_chart, facet_chart, gaps_chart, timing_chart
+from fundprint.charts import allocation_chart, facet_chart, gaps_chart, periodicity_chart
 from fundprint.classify import ASSET_CLASSES, UNCLASSIFIED, classify_isin
-from fundprint.insights import fund_gaps, purchase_timing
+from fundprint.insights import fund_gaps, periodicity
 from fundprint.lots import held_lots
 from fundprint.xirr import xirr
 
 st.set_page_config(page_title="Fundprint · Time in Market", page_icon="🔒", layout="wide")
 
-TIMING_CAPTION = (
-    "Dots are all your purchases still held today, coloured by asset class and shown against the Nifty 50. "
-    "For debt and gold, the Nifty level is context, not a judgement: their returns don't depend on it. "
-    "Timing is only part of the story: regular SIPs buy at all levels by design, and a high today can look low a few years later."
+PERIODICITY_CAPTION = (
+    "Every purchase you've made, including ones since sold, shown against the Nifty 50 for context. "
+    "\"Periodic\" means within 5 days of your usual investing day for that fund. "
+    "Regular rebalancing on other dates isn't recognised yet."
 )
 
 
@@ -121,14 +121,14 @@ def main():
     if (all_cf.asset_class != "Equity").any():
         st.caption("Debt, gold and other non-equity funds aren't shown here.")
 
-    timing = purchase_timing(all_cf, bench)
-    if timing is None:
+    regular = periodicity(parsed.txns, bench)
+    if regular is None:
         st.caption("No purchases fall inside the benchmark's history.")
     else:
-        fig = timing_chart(timing, as_of)
+        fig = periodicity_chart(regular, as_of)
         st.pyplot(fig)
-        st.download_button("Download this chart (PNG)", png(fig), "fundprint_when_you_bought.png", "image/png")
-        st.caption(TIMING_CAPTION)
+        st.download_button("Download this chart (PNG)", png(fig), "fundprint_regular_investing.png", "image/png")
+        st.caption(PERIODICITY_CAPTION)
 
     with st.expander("How this is calculated"):
         st.markdown("""
@@ -138,7 +138,7 @@ def main():
     - **Nifty 50 replay.** We take the same amounts on the same dates and imagine they went into a Nifty 50 index fund instead. Same cash flows, different fund, so the gap is about the fund and not about timing.
     - **Under 1 year** the XIRR is annualised from a few months and swings wildly, so it is faded. Read the absolute return instead.
     - **Index twin per fund.** Each fund's purchases are replayed into a Nifty 50 index fund on the same dates, and the two XIRRs are compared. It is the Nifty 50 for every fund, not each fund's own category.
-    - **Near a 52-week high.** A day counts as near a high when the Nifty 50 index fund's price is within 5% of its highest price over the previous 365 days. The market figure uses the same years as your purchases (first to last), so the two numbers are comparable.
+    - **Regular investing.** For each fund, Fundprint finds the day of the month you most often invest on, and counts a purchase as periodic if it's within 5 days of that day (counting across the month end). A fund needs at least 3 such purchases to have a pattern. Switches, reinvested dividends and reversed payments aren't counted.
 
     **Limits.** Units already sold aren't counted, which makes results look slightly kinder than reality. Cash paid out by IDCW payout plans isn't counted as a return. XIRR reflects timing as well as fund quality, which is why the index replay is shown.
     """)

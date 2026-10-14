@@ -166,32 +166,26 @@ def gaps_chart(t):
     return fig
 
 
-CLASS_COLOURS = {"Equity": ACCENT, "Debt": INDIA, "Commodity": MUTED}
-
-
-def timing_chart(tm, as_of):
-    """Nifty 50 NAV over the years, with a dot for every held purchase."""
+def periodicity_chart(pr, as_of):
+    """Nifty 50 NAV over the years, with a dot for every purchase: periodic (filled) or one-off (hollow)."""
     from matplotlib.lines import Line2D
-    from .insights import timing_title
+    from .insights import periodicity_subtitle, periodicity_title
 
-    p = tm.purchases
-    line = tm.levels[tm.levels.index >= p.date.min() - pd.Timedelta(days=45)]
+    p = pr.purchases
+    line = pr.levels[pr.levels.index >= p.date.min() - pd.Timedelta(days=45)]
     with plt.rc_context({"font.family": SERIF}):
-        fig = plt.figure(figsize=(9, 7.2))
+        fig = plt.figure(figsize=(9, 6.6))
         fig.patch.set_facecolor(BG)
         ax = fig.add_axes([0.09, 0.2, 0.88, 0.5])
         ax.set_facecolor(BG)
-        # light band on the dates the Nifty 50 was near a high
-        ax.fill_between(line.index, 0, 1, where=line.near.to_numpy(), transform=ax.get_xaxis_transform(),
-                        color=STRIP, alpha=0.55, lw=0, step="post")
         ax.plot(line.index, line.nav, color=DARK, lw=0.9)
         scale = 4000.0   # marker area per unit share: a 10% purchase is ~400 pt²
-        for cls, g in p.groupby("cls"):
+        for periodic, g in p.groupby("periodic"):
             sizes = (g.share * scale).clip(lower=6)
-            if cls == "Other":
-                ax.scatter(g.date, g.nav, s=sizes, facecolors="none", edgecolors=MUTED, linewidths=0.8, zorder=3)
+            if periodic:
+                ax.scatter(g.date, g.nav, s=sizes, color=ACCENT, alpha=0.45, linewidths=0, zorder=3)
             else:
-                ax.scatter(g.date, g.nav, s=sizes, color=CLASS_COLOURS[cls], alpha=0.45, linewidths=0, zorder=3)
+                ax.scatter(g.date, g.nav, s=sizes, facecolors="none", edgecolors=MUTED, linewidths=0.9, zorder=3)
         ax.set_ylabel("Nifty 50 index fund NAV", color=DARK, fontsize=9)
         ax.tick_params(length=0, colors=DARK, labelsize=9)
         ax.grid(axis="y", color=PANEL, lw=1.0)
@@ -199,27 +193,17 @@ def timing_chart(tm, as_of):
         for s in ax.spines.values():
             s.set_visible(False)
 
-        handles = []
-        for c in tm.classes:
-            if c == "Other":
-                handles.append(Line2D([], [], marker="o", ls="", mfc="none", mec=MUTED, ms=8, label="Other"))
-            else:
-                handles.append(Line2D([], [], marker="o", ls="", color=CLASS_COLOURS[c], alpha=0.6, ms=8, label=c))
-        for pct in (1, 5, 10):
-            handles.append(Line2D([], [], marker="o", ls="", mfc="#BBBBBB", mec="none",
-                                  ms=(pct / 100 * scale) ** 0.5, label=f"{pct}% of money"))
+        handles = [Line2D([], [], marker="o", ls="", color=ACCENT, alpha=0.6, ms=8, label="Periodic"),
+                   Line2D([], [], marker="o", ls="", mfc="none", mec=MUTED, ms=8, label="One-off")]
+        handles += [Line2D([], [], marker="o", ls="", mfc="#BBBBBB", mec="none",
+                           ms=(pct / 100 * scale) ** 0.5, label=f"{pct}% of money") for pct in (1, 5, 10)]
         ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(handles),
                   frameon=False, fontsize=8, labelcolor=DARK, handletextpad=0.2, columnspacing=1.1)
 
-        # headline above the chart
-        fig.text(0.04, 0.965, _wrap(timing_title(tm), 78), ha="left", va="top", fontsize=13, fontweight="bold", color=DARK)
-        figs = "  ·  ".join(f"{c} {tm.near_pct[c]:.0f}%" for c in tm.classes)
-        fig.text(0.04, 0.85, "Money that went in when the Nifty 50 was within 5% of its 52-week high:", ha="left",
-                 va="top", fontsize=9, color=DARK)
-        fig.text(0.04, 0.82, figs, ha="left", va="top", fontsize=11, fontweight="bold", color=DARK)
-        fig.text(0.04, 0.78, f"Over the same years, the Nifty 50 was that close to its high on {tm.baseline_pct:.0f}% of trading days.",
-                 ha="left", va="top", fontsize=9, color=DARK)
-        fig.text(0.04, 0.925, "All funds, by asset class", ha="left", va="top", fontsize=8.5, color=MUTED)
-        fig.text(0.04, 0.012, f"Fundprint · Nifty 50 = UTI Nifty 50 Index Fund Direct Growth · shaded where within 5% of the 52-week high · as of {as_of:%d %b %Y}",
+        fig.text(0.04, 0.965, _wrap(periodicity_title(pr), 78), ha="left", va="top", fontsize=13,
+                 fontweight="bold", color=DARK)
+        fig.text(0.04, 0.925, "All funds", ha="left", va="top", fontsize=8.5, color=MUTED)
+        fig.text(0.04, 0.89, periodicity_subtitle(pr), ha="left", va="top", fontsize=9, color=DARK, linespacing=1.5)
+        fig.text(0.04, 0.012, f"Fundprint · Nifty 50 = UTI Nifty 50 Index Fund Direct Growth, shown for context · as of {as_of:%d %b %Y}",
                  fontsize=7.5, color=MUTED, ha="left")
     return fig

@@ -5,10 +5,9 @@ import pandas as pd
 import pytest
 
 from fundprint.benchmark import load_bench
-from fundprint.charts import gaps_chart, timing_chart
-from fundprint.insights import (
-    CLASS_ORDER, fund_gaps, gaps_title, near_high, purchase_timing, short_name, timing_title, title_for,
-)
+from fundprint import insights
+from fundprint.charts import gaps_chart, periodicity_chart
+from fundprint.insights import fund_gaps, gaps_title, periodicity, periodicity_subtitle, periodicity_title, short_name
 from tests.test_benchmark import growing_bench
 from tests.test_lots import TODAY
 
@@ -94,96 +93,105 @@ def test_short_names_drop_plan_and_option_text():
     assert short_name("Axis Growth Opportunities Fund - Regular Plan - Growth") == "Axis Growth Opportunities Fund"
 
 
-# ---- near a high ----
+# ---- how regular is your investing ----
 
-def series(navs, start="2024-01-01"):
-    d = pd.date_range(start, periods=len(navs), freq="D")
-    return load_bench([{"date": x.strftime("%Y-%m-%d"), "nav": v} for x, v in zip(d, navs)])
-
-
-def test_near_high_matches_hand_made_series_including_the_boundary():
-    nh = near_high(series([100, 96, 95, 94.99, 100, 120, 113.9, 114])).tolist()
-    assert nh == [True, True, True, False, True, True, False, True]    # 95 and 114 sit exactly on the line
-
-
-def test_old_peaks_drop_out_of_the_window():
-    navs = [200] + [100] * 400
-    nh = near_high(series(navs))
-    assert not nh.iloc[10] and nh.iloc[-1]
+def txns(rows):
+    """rows: (date, kind, units, scheme, folio) -> transactions. Amount is units x 10."""
+    df = pd.DataFrame(rows, columns=["date", "kind", "units", "scheme", "folio"])
+    df["date"] = pd.to_datetime(df["date"])
+    df["isin"] = "I-" + df.scheme
+    df["amount"] = df.units * 10.0
+    return df
 
 
-# ---- when did you buy ----
+def sips(scheme, day, months=12, kind="PURCHASE_SIP", folio="F1", start="2024-01-01"):
+    return [(d.replace(day=day), kind, 5.0, scheme, folio) for d in pd.date_range(start, periods=months, freq="MS")]
 
-def timing_cf():
-    """Bench: 100 for 5 days (near), a jump to 200 (near), then 100 again (not near). One lot per day."""
-    navs = [100, 100, 200, 200, 100, 100]
-    bench = series(navs)
-    days = bench.date
-    rows = [  # (day index, cost, class)
-        (0, 100.0, "Equity"), (1, 300.0, "Equity"), (4, 100.0, "Equity"),       # equity: 400 near / 500
-        (2, 50.0, "Debt"), (4, 50.0, "Debt"),                                   # debt: 50 near / 100
-        (3, 100.0, "Commodity"),                                                # commodity: all near
+
+def test_monthly_sip_on_the_fifth_is_fully_periodic():
+    pr = periodicity(txns(sips("A", 5)), growing_bench())
+    assert pr.pct == 100 and pr.usual_days == [5]
+    assert periodicity_title(pr) == "100% of your investments followed a regular pattern"
+    assert periodicity_subtitle(pr).endswith("Your usual day: the 5th.")
+
+
+def test_each_fund_gets_its_own_usual_day(monkeypatch):
+    t = txns(sips("A", 5) + sips("B", 20))
+    pr = periodicity(t, growing_bench())
+    assert pr.pct == 100 and pr.usual_days == [5, 20]
+    assert periodicity_subtitle(pr).endswith("Your usual days: the 5th, the 20th.")
+    monkeypatch.setattr(insights, "PERIODICITY_GROUP", "all")
+    assert periodicity(t, growing_bench()).pct == 50     # the 20th SIPs are far from the 5th
+
+
+def test_zone_wraps_around_the_month_end():
+    assert insights.day_distance(28, 30) == 2 and insights.day_distance(28, 2) == 5 and insights.day_distance(28, 4) == 7
+    rows = sips("A", 28, 6) + [("2024-08-30", "PURCHASE", 5.0, "A", "F1"), ("2024-09-02", "PURCHASE", 5.0, "A", "F1"),
+                               ("2024-09-04", "PURCHASE", 5.0, "A", "F1")]
+    p = periodicity(txns(rows), growing_bench()).purchases
+    flag = dict(zip(p.date.dt.strftime("%Y-%m-%d"), p.periodic))
+    assert flag["2024-08-30"] and flag["2024-09-02"] and not flag["2024-09-04"]
+
+
+def test_two_purchases_are_below_the_minimum_pattern():
+    t = txns([("2024-03-05", "PURCHASE", 5.0, "A", "F1"), ("2024-03-05", "PURCHASE", 5.0, "A", "F1")])
+    pr = periodicity(t, growing_bench())
+    assert pr.pct == 0 and pr.usual_days == []
+
+
+def test_a_single_lump_sum_is_one_off():
+    pr = periodicity(txns([("2024-03-05", "PURCHASE", 50.0, "A", "F1")]), growing_bench())
+    assert pr.pct == 0 and not pr.purchases.periodic.any()
+
+
+def test_internal_moves_and_reversed_purchases_are_not_counted():
+    rows = sips("A", 5, 3) + [
+        ("2024-06-05", "DIVIDEND_REINVEST", 1.0, "A", "F1"), ("2024-06-05", "SWITCH_IN", 4.0, "A", "F1"),
+        ("2024-06-05", "STP_IN", 4.0, "A", "F1"), ("2024-07-05", "PURCHASE_SIP", 7.5, "A", "F1"),
+        ("2024-07-08", "REVERSAL", -7.5, "A", "F1"), ("2024-07-09", "STAMP_DUTY", 0.0, "A", "F1"),
     ]
-    f = fund("A")
-    cf = pd.DataFrame([(i, "x", days[d], -c, f["folio"], f["scheme"], f["isin"], cls) for i, (d, c, cls) in enumerate(rows)],
-                      columns=["lot", "bucket", "date", "amount", "folio", "scheme", "isin", "asset_class"])
-    return cf, bench
+    assert len(insights.counted_purchases(txns(rows))) == 3
 
 
-def test_near_high_share_is_cost_weighted_within_each_class():
-    cf, bench = timing_cf()
-    t = purchase_timing(cf, bench)
-    assert t.near_pct["Equity"] == pytest.approx(80.0)
-    assert t.near_pct["Debt"] == pytest.approx(50.0)
-    assert t.near_pct["Commodity"] == pytest.approx(100.0)
-    assert t.all_pct == pytest.approx(100 * 550 / 700)
-    assert t.classes == ["Equity", "Debt", "Commodity"]     # Other is not held, so it is not listed
+def test_sold_purchases_still_count():
+    rows = sips("A", 5, 4) + [("2024-12-01", "REDEMPTION", -20.0, "A", "F1")]
+    assert len(insights.counted_purchases(txns(rows))) == 4
 
 
-def test_baseline_counts_only_trading_days_between_first_and_last_purchase():
-    cf, bench = timing_cf()
-    first = cf.copy()
-    first = first[first.date.between(bench.date[1], bench.date[3])]   # purchases on days 1-3 only
-    t = purchase_timing(first, bench)
-    assert t.baseline_pct == pytest.approx(100.0)                      # days 1,2,3 are all near a high
-    t = purchase_timing(cf, bench)
-    assert t.baseline_pct == pytest.approx(80.0)                       # days 0-4 (last purchase): 4 near, 1 not
+def test_same_fund_in_two_folios_is_one_group():
+    rows = sips("A", 5, 2, folio="F1") + sips("A", 5, 2, folio="F2", start="2024-03-01")
+    assert periodicity(txns(rows), growing_bench()).pct == 100    # 2 + 2 purchases reach the minimum of 3 together
 
 
-def test_other_is_listed_only_at_five_percent_of_the_money():
-    cf, bench = timing_cf()
-    f = fund("B")
-    small = pd.DataFrame([(99, "x", bench.date[1], -10.0, f["folio"], f["scheme"], f["isin"], "Hybrid")], columns=cf.columns)
-    assert "Other" not in purchase_timing(pd.concat([cf, small]), bench).classes      # 10 of 710 is under 5%
-    big = small.assign(amount=-100.0)
-    t = purchase_timing(pd.concat([cf, big]), bench)
-    assert t.classes[-1] == "Other"
+def test_same_day_sips_in_three_funds_are_three_purchases():
+    rows = [(d, k, u, s, "F1") for s in "ABC" for d, k, u, _, _ in sips(s, 5, 3)]
+    assert len(periodicity(txns(rows), growing_bench()).purchases) == 9
 
 
-def test_title_uses_equity_and_falls_back_to_all_funds():
-    cf, bench = timing_cf()
-    t = purchase_timing(cf, bench)
-    assert timing_title(t) == title_for(80.0 - t.baseline_pct)
-    no_equity = purchase_timing(cf[cf.asset_class != "Equity"], bench)
-    assert timing_title(no_equity) == title_for(no_equity.all_pct - no_equity.baseline_pct)
+def test_ties_resolve_by_window_coverage_then_earliest_day():
+    days = pd.Series([10, 10, 20, 20, 22])          # 10 and 20 tie on count; 20's zone also holds 22
+    assert insights._usual_day(days) == 20
+    assert insights._usual_day(pd.Series([3, 3, 25, 25])) == 3     # equal coverage: earliest
 
 
-def test_title_rule_at_plus_six_zero_and_minus_six():
-    assert title_for(6).startswith("More of your money")
-    assert title_for(0) == "Your buying looks close to random timing"
-    assert title_for(-6).startswith("Less of your money")
-    assert title_for(5) == title_for(-5) == "Your buying looks close to random timing"
+def test_usual_days_list_is_capped_with_and_others():
+    pr = insights.Periodicity(None, 80, [5, 10, 15, 20], None)
+    assert periodicity_subtitle(pr).endswith("the 5th, the 10th, the 15th and others.")
+    assert insights.ordinal(1) == "the 1st" and insights.ordinal(22) == "the 22nd" and insights.ordinal(11) == "the 11th"
 
 
-def test_every_class_in_the_order_list_is_known_to_the_chart():
-    assert CLASS_ORDER == ["Equity", "Debt", "Commodity", "Other"]
+def test_no_pattern_gives_the_plain_title_and_no_usual_day_line():
+    pr = periodicity(txns([("2024-03-05", "PURCHASE", 5.0, "A", "F1"), ("2024-07-20", "PURCHASE", 5.0, "B", "F1")]),
+                     growing_bench())
+    assert periodicity_title(pr) == "Your investments don't follow a regular monthly pattern"
+    assert periodicity_subtitle(pr) == ""
 
 
 # ---- no rupee amounts in either chart ----
 
 def test_charts_carry_no_rupee_text():
-    cf, bench = timing_cf()
-    figs = [timing_chart(purchase_timing(cf, bench), bench.date.iloc[-1])]
+    pr = periodicity(txns(sips("A", 5) + [("2024-03-12", "PURCHASE", 80.0, "B", "F1")]), growing_bench())
+    figs = [periodicity_chart(pr, growing_bench().date.iloc[-1])]
     eq = lots([(fund("A"), "2020-03-05", 100.0, 0.12, "Equity"), (fund("B", "I2"), "2022-03-05", 50.0, 0.05, "Equity")])
     figs.append(gaps_chart(fund_gaps(eq, growing_bench(), TODAY).table))
     for fig in figs:

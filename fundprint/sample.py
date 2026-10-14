@@ -18,11 +18,13 @@ FUNDS = [
     ("Sample Small Cap Fund - Direct Growth", "INF000SAMPLE3", 0.06, 0.24, 2.5,
      [(300, 40000.0)], []),
     ("Sample Short Duration Debt Fund - Direct Growth", "INF000SAMPLE4", 0.07, 0.01, 0,
-     [(1300, 150000.0), (600, 100000.0), (90, 50000.0)], [(150, 0.15)]),
+     [(1300, 150000.0), (600, 100000.0), (130, 50000.0)], [(150, 0.15)]),
     ("Sample Gold ETF Fund of Fund - Direct Growth", "INF000SAMPLE5", 0.10, 0.15, 0,
      [(1000, 60000.0), (450, 40000.0)], []),
 ]
 SIP_AMOUNT = 5000.0
+# SIP day of the month per fund; the default is the 5th. The 30th lands on the 1st or 2nd in some months.
+SIP_DAY = {"INF000SAMPLE2": 20, "INF000SAMPLE3": 30}
 
 
 def sample_cas(today=None, seed=7):
@@ -35,7 +37,7 @@ def sample_cas(today=None, seed=7):
                 ((today - pd.Timedelta(days=ago), amount) for ago, amount in lumps)]
         if sip_years:
             start = today - pd.DateOffset(years=int(sip_years), months=int(sip_years % 1 * 12))
-            sip_dates = pd.date_range(start, today - pd.DateOffset(months=1), freq="MS") + pd.Timedelta(days=4)
+            sip_dates = pd.date_range(start, today - pd.DateOffset(months=1), freq="MS") + pd.Timedelta(days=SIP_DAY.get(isin, 5) - 1)
             buys += [(d, "PURCHASE_SIP", SIP_AMOUNT) for d in sip_dates]
         buys.sort(key=lambda b: b[0])
         first_dates.append(buys[0][0])
