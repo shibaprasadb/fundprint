@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use("Agg")  # draw to memory, no window needed (works in the browser build too)
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from .lots import ORDER
 
@@ -103,4 +104,122 @@ def allocation_chart(t):
         fig.text(0.04, 0.02, "Share of money invested in units still held, by time since purchase · Fundprint",
                  fontsize=7.5, color=MUTED, ha="left")
         fig.subplots_adjust(left=0.1, right=0.96, top=0.82, bottom=0.13)
+    return fig
+
+
+# ---- Big picture charts ----
+
+def _wrap(text, width):
+    import textwrap
+    return "\n".join(textwrap.fill(line, width) for line in text.split("\n"))
+
+
+def _pp(v):
+    return f"{v:+.1f} pp".replace("-", "−")
+
+
+def gaps_chart(t):
+    """One bar per equity fund: its gap to the Nifty 50 twin, in percentage points."""
+    from matplotlib.transforms import blended_transform_factory
+    from .insights import gaps_title
+
+    n = len(t)
+    with plt.rc_context({"font.family": SERIF}):
+        fig, ax = plt.subplots(figsize=(8, 0.62 * n + 2.6))
+        fig.patch.set_facecolor(BG)
+        ax.set_facecolor(BG)
+        ys = list(range(n))[::-1]   # most ahead on top
+        span = max(t.gap_pp.abs().max(), 1.0) * 1.9
+        ax.set_xlim(-span, span)
+        ax.set_ylim(-0.6, n - 0.4)
+        side = blended_transform_factory(ax.transAxes, ax.transData)
+        for y, r in zip(ys, t.itertuples()):
+            fade = 0.35 if r.young else 1.0
+            ax.barh(y, r.gap_pp, 0.55, color=ACCENT, alpha=fade)
+            ax.text(r.gap_pp + (span * 0.02) * (1 if r.gap_pp >= 0 else -1), y + (0.1 if r.young else 0),
+                    _pp(r.gap_pp), va="center", ha="left" if r.gap_pp >= 0 else "right",
+                    fontsize=9, color=ACCENT, fontweight="bold")
+            if r.young:
+                ax.text(r.gap_pp + (span * 0.02) * (1 if r.gap_pp >= 0 else -1), y - 0.17, "<1Y, absolute return",
+                        va="center", ha="left" if r.gap_pp >= 0 else "right", fontsize=7, color=MUTED)
+            name = r.name if len(r.name) <= 30 else r.name[:29].rstrip() + "…"
+            ax.text(-0.02, y + 0.12, name, transform=side, ha="right", va="center", fontsize=9, color=DARK)
+            ax.text(-0.02, y - 0.17, f"{r._2:.0f}% of equity money", transform=side, ha="right", va="center",
+                    fontsize=7.5, color=MUTED)
+        ax.axvline(0, color=DARK, lw=0.8)
+        ax.set_yticks([])
+        ax.set_xticks([])
+        for s in ax.spines.values():
+            s.set_visible(False)
+        ax.text(0.5, -0.02 - 0.12 / max(n, 1), "◀ behind its twin        ahead of its twin ▶", transform=ax.transAxes,
+                ha="center", va="top", fontsize=8, color=MUTED)
+
+        sub = ("Each fund compared with a Nifty 50 index fund bought on the same dates, not with its own category. "
+               "A midcap or small cap fund can trail the Nifty 50 simply because its whole category did.")
+        h = 0.62 * n + 2.6
+        fig.text(0.04, 1 - 0.25 / h, gaps_title(t), ha="left", va="top", fontsize=13, fontweight="bold", color=DARK)
+        fig.text(0.04, 1 - 0.55 / h, "Equity funds only", ha="left", va="top", fontsize=8.5, color=MUTED)
+        fig.text(0.04, 1 - 0.8 / h, _wrap(sub, 105), ha="left", va="top", fontsize=8.5, color=DARK)
+        foot = "Gap in XIRR, percentage points · Fundprint · Nifty 50 = UTI Nifty 50 Index Fund Direct Growth"
+        fig.text(0.04, 0.012, foot, fontsize=7.5, color=MUTED, ha="left")
+        fig.subplots_adjust(left=0.36, right=0.96, top=1 - 1.55 / h, bottom=0.45 / h + 0.05)
+    return fig
+
+
+CLASS_COLOURS = {"Equity": ACCENT, "Debt": INDIA, "Commodity": MUTED}
+
+
+def timing_chart(tm, as_of):
+    """Nifty 50 NAV over the years, with a dot for every held purchase."""
+    from matplotlib.lines import Line2D
+    from .insights import timing_title
+
+    p = tm.purchases
+    line = tm.levels[tm.levels.index >= p.date.min() - pd.Timedelta(days=45)]
+    with plt.rc_context({"font.family": SERIF}):
+        fig = plt.figure(figsize=(9, 7.2))
+        fig.patch.set_facecolor(BG)
+        ax = fig.add_axes([0.09, 0.2, 0.88, 0.5])
+        ax.set_facecolor(BG)
+        # light band on the dates the Nifty 50 was near a high
+        ax.fill_between(line.index, 0, 1, where=line.near.to_numpy(), transform=ax.get_xaxis_transform(),
+                        color=STRIP, alpha=0.55, lw=0, step="post")
+        ax.plot(line.index, line.nav, color=DARK, lw=0.9)
+        scale = 4000.0   # marker area per unit share: a 10% purchase is ~400 pt²
+        for cls, g in p.groupby("cls"):
+            sizes = (g.share * scale).clip(lower=6)
+            if cls == "Other":
+                ax.scatter(g.date, g.nav, s=sizes, facecolors="none", edgecolors=MUTED, linewidths=0.8, zorder=3)
+            else:
+                ax.scatter(g.date, g.nav, s=sizes, color=CLASS_COLOURS[cls], alpha=0.45, linewidths=0, zorder=3)
+        ax.set_ylabel("Nifty 50 index fund NAV", color=DARK, fontsize=9)
+        ax.tick_params(length=0, colors=DARK, labelsize=9)
+        ax.grid(axis="y", color=PANEL, lw=1.0)
+        ax.set_axisbelow(True)
+        for s in ax.spines.values():
+            s.set_visible(False)
+
+        handles = []
+        for c in tm.classes:
+            if c == "Other":
+                handles.append(Line2D([], [], marker="o", ls="", mfc="none", mec=MUTED, ms=8, label="Other"))
+            else:
+                handles.append(Line2D([], [], marker="o", ls="", color=CLASS_COLOURS[c], alpha=0.6, ms=8, label=c))
+        for pct in (1, 5, 10):
+            handles.append(Line2D([], [], marker="o", ls="", mfc="#BBBBBB", mec="none",
+                                  ms=(pct / 100 * scale) ** 0.5, label=f"{pct}% of money"))
+        ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(handles),
+                  frameon=False, fontsize=8, labelcolor=DARK, handletextpad=0.2, columnspacing=1.1)
+
+        # headline above the chart
+        fig.text(0.04, 0.965, _wrap(timing_title(tm), 78), ha="left", va="top", fontsize=13, fontweight="bold", color=DARK)
+        figs = "  ·  ".join(f"{c} {tm.near_pct[c]:.0f}%" for c in tm.classes)
+        fig.text(0.04, 0.85, "Money that went in when the Nifty 50 was within 5% of its 52-week high:", ha="left",
+                 va="top", fontsize=9, color=DARK)
+        fig.text(0.04, 0.82, figs, ha="left", va="top", fontsize=11, fontweight="bold", color=DARK)
+        fig.text(0.04, 0.78, f"Over the same years, the Nifty 50 was that close to its high on {tm.baseline_pct:.0f}% of trading days.",
+                 ha="left", va="top", fontsize=9, color=DARK)
+        fig.text(0.04, 0.925, "All funds, by asset class", ha="left", va="top", fontsize=8.5, color=MUTED)
+        fig.text(0.04, 0.012, f"Fundprint · Nifty 50 = UTI Nifty 50 Index Fund Direct Growth · shaded where within 5% of the 52-week high · as of {as_of:%d %b %Y}",
+                 fontsize=7.5, color=MUTED, ha="left")
     return fig

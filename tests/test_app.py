@@ -34,3 +34,13 @@ def test_time_in_market_has_no_rupee_text():
 def test_sample_banner_shows_on_the_analysis_page():
     at = _run(None)
     assert any("sample portfolio (made-up data)" in i.value for i in at.info)
+
+
+def test_big_picture_section_ignores_the_scope_toggle():
+    for scope in (None, "Equity funds only"):
+        at = _run(scope)
+        assert not at.exception
+        assert [h.value for h in at.header] == ["By time in market", "The big picture"]
+        captions = [c.value for c in at.caption]
+        assert any("the toggle above doesn't change them" in c for c in captions)
+        assert any("aren't shown here" in c for c in captions)
