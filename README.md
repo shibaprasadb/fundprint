@@ -27,6 +27,7 @@ The reference notebook is in [notebooks/xirr_analysis.ipynb](notebooks/xirr_anal
 ## Run it locally
 ```bash
 pip install -r requirements-dev.txt
+nbstripout --install              # once after cloning: clears notebook outputs when you commit
 python scripts/refresh_data.py     # downloads the public benchmark and category data
 streamlit run app/Home.py
 pytest
