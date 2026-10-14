@@ -179,13 +179,11 @@ def periodicity_chart(pr, as_of):
         ax = fig.add_axes([0.09, 0.2, 0.88, 0.5])
         ax.set_facecolor(BG)
         ax.plot(line.index, line.nav, color=DARK, lw=0.9)
-        scale = 4000.0   # marker area per unit share: a 10% purchase is ~400 pt²
         for periodic, g in p.groupby("periodic"):
-            sizes = (g.share * scale).clip(lower=6)
             if periodic:
-                ax.scatter(g.date, g.nav, s=sizes, color=ACCENT, alpha=0.45, linewidths=0, zorder=3)
+                ax.scatter(g.date, g.nav, s=28, color=ACCENT, alpha=0.5, linewidths=0, zorder=3)
             else:
-                ax.scatter(g.date, g.nav, s=sizes, facecolors="none", edgecolors=MUTED, linewidths=0.9, zorder=3)
+                ax.scatter(g.date, g.nav, s=28, facecolors="none", edgecolors=MUTED, linewidths=0.9, zorder=3)
         ax.set_ylabel("Nifty 50 index fund NAV", color=DARK, fontsize=9)
         ax.tick_params(length=0, colors=DARK, labelsize=9)
         ax.grid(axis="y", color=PANEL, lw=1.0)
@@ -195,8 +193,6 @@ def periodicity_chart(pr, as_of):
 
         handles = [Line2D([], [], marker="o", ls="", color=ACCENT, alpha=0.6, ms=8, label="Periodic"),
                    Line2D([], [], marker="o", ls="", mfc="none", mec=MUTED, ms=8, label="One-off")]
-        handles += [Line2D([], [], marker="o", ls="", mfc="#BBBBBB", mec="none",
-                           ms=(pct / 100 * scale) ** 0.5, label=f"{pct}% of money") for pct in (1, 5, 10)]
         ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(handles),
                   frameon=False, fontsize=8, labelcolor=DARK, handletextpad=0.2, columnspacing=1.1)
 

@@ -111,7 +111,7 @@ def sips(scheme, day, months=12, kind="PURCHASE_SIP", folio="F1", start="2024-01
 def test_monthly_sip_on_the_fifth_is_fully_periodic():
     pr = periodicity(txns(sips("A", 5)), growing_bench())
     assert pr.pct == 100 and pr.usual_days == [5]
-    assert periodicity_title(pr) == "100% of your investments followed a regular pattern"
+    assert periodicity_title(pr) == "100% of your transactions followed a regular pattern"
     assert periodicity_subtitle(pr).endswith("Your usual day: the 5th.")
 
 
@@ -183,7 +183,7 @@ def test_usual_days_list_is_capped_with_and_others():
 def test_no_pattern_gives_the_plain_title_and_no_usual_day_line():
     pr = periodicity(txns([("2024-03-05", "PURCHASE", 5.0, "A", "F1"), ("2024-07-20", "PURCHASE", 5.0, "B", "F1")]),
                      growing_bench())
-    assert periodicity_title(pr) == "Your investments don't follow a regular monthly pattern"
+    assert periodicity_title(pr) == "Your transactions don't follow a regular monthly pattern"
     assert periodicity_subtitle(pr) == ""
 
 
