@@ -10,6 +10,7 @@ from .lots import ORDER
 
 BG, DARK, ACCENT, INDIA, MUTED = "#FAFAF7", "#1A1A1A", "#C0392B", "#2C5F8A", "#888888"
 PANEL, STRIP = "#EFEFE8", "#DCDCD3"
+ONE_OFF = "#2BE02B"   # one-off purchases in the regular-investing chart: neon green stands out against red dots and the page
 SERIF = "serif"
 
 
@@ -183,7 +184,7 @@ def periodicity_chart(pr, as_of):
             if periodic:
                 ax.scatter(g.date, g.nav, s=28, color=ACCENT, alpha=0.5, linewidths=0, zorder=3)
             else:
-                ax.scatter(g.date, g.nav, s=28, color=INDIA, alpha=0.5, linewidths=0, zorder=3)
+                ax.scatter(g.date, g.nav, s=40, color=ONE_OFF, alpha=0.95, edgecolors=DARK, linewidths=0.5, zorder=4)
         ax.set_ylabel("Nifty 50 index fund NAV", color=DARK, fontsize=9)
         ax.tick_params(length=0, colors=DARK, labelsize=9)
         ax.grid(axis="y", color=PANEL, lw=1.0)
@@ -192,7 +193,7 @@ def periodicity_chart(pr, as_of):
             s.set_visible(False)
 
         handles = [Line2D([], [], marker="o", ls="", color=ACCENT, alpha=0.6, ms=8, label="Periodic"),
-                   Line2D([], [], marker="o", ls="", color=INDIA, alpha=0.6, ms=8, label="One-off")]
+                   Line2D([], [], marker="o", ls="", mfc=ONE_OFF, mec=DARK, mew=0.5, ms=8, label="One-off")]
         ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=len(handles),
                   frameon=False, fontsize=8, labelcolor=DARK, handletextpad=0.2, columnspacing=1.1)
 
