@@ -39,6 +39,9 @@ pytest
 The app runs in the browser with [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to run client-side), as plain static files.
 - `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`, so the page loads no outside script at all (the Umami visit counter is a fixed copy in `web/umami.js`).
 - `scripts/build_web.py` assembles the site in `dist/`.
+- Everything the build downloads is pinned to an exact version and checked against a SHA-256 hash written in `scripts/fetch_vendor.py`. On a mismatch the script deletes the file and stops. To move to a new version, change the version and hash there, and compare the hash with what the publisher lists.
+- The CI jobs install from `requirements-ci.txt`, a full list of exact versions and hashes (`pip install --require-hashes`). `requirements.txt` and `requirements-dev.txt` stay the short files you edit; make the lock again with the command at the top of `requirements-ci.txt`, read what changed, and open a pull request.
+- The deploy has two jobs: `build` (installs, tests, downloads, builds; no secrets) and `deploy` (holds the deploy key; runs no Python and no script from this repo). GitHub Actions are pinned to full commit IDs.
 - `.github/workflows/deploy.yml` pushes `dist/` into a separate `lab` repo (published at `lab.shibaprasadb.com/fundprint`). GitHub Pages stays OFF in this repo.
 - `.github/workflows/refresh-data.yml` refreshes the public benchmark and category data every day.
 

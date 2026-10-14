@@ -11,3 +11,4 @@ dist/
 web/vendor/
 !tests/fixtures/*.pdf
 .claude/
+web/.stlite-sha256
