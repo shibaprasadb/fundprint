@@ -66,3 +66,19 @@ def test_umami_script_is_the_reviewed_copy():
     import hashlib
     digest = hashlib.sha256((ROOT / "web/umami.js").read_bytes()).hexdigest()
     assert digest == "91a876d767646fd5b7701b6fabf97f8a99ae53b94e7e5b58d465bad1e5d763e0"
+
+def test_notebooks_have_no_outputs():
+    """A notebook run on a real statement would print the whole portfolio, so none may carry outputs."""
+    import json
+    skip = {".ipynb_checkpoints", ".venv", "dist"}
+    for f in ROOT.rglob("*.ipynb"):
+        rel = f.relative_to(ROOT)
+        if skip & set(rel.parts) or rel.parts[:2] == ("web", "vendor"):
+            continue
+        for i, cell in enumerate(json.loads(f.read_text()).get("cells", [])):
+            if cell.get("cell_type") != "code":
+                continue
+            assert not cell.get("outputs") and cell.get("execution_count") is None, (
+                f"{rel} cell {i} has outputs. Clear all outputs in Jupyter, or run `nbstripout {rel}`, "
+                "then run the tests again."
+            )

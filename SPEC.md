@@ -33,7 +33,7 @@ Directly under it:
 | P7 | **No network calls at runtime except fetching the app's own static files** (`/data/*.json`, Python wheels) and the anonymous Umami counts. Never call mfapi.in, AMFI or anything else from the browser. | All public data is pre-fetched by a scheduled job (see §5). |
 | P8 | **Errors never show statement data.** Catch exceptions around parsing and analysis; show a plain message ("Couldn't read this statement. Is it a CAMS/KFintech detailed CAS?"). Set `client.showErrorDetails = false`. Never `print()` or log DataFrames, folio numbers, PAN, names or amounts. | Tracebacks and logs leak values. |
 | P9 | **The PDF password is used once to open the file and then discarded.** Use `st.text_input(type="password")`; don't keep it in session state. | |
-| P10 | **No real statements in the repo, ever.** `.gitignore` all `*.pdf`; use only synthetic test data; strip notebook outputs (`nbstripout` pre-commit hook). The reference notebook must be committed **with outputs cleared**. | The repo is public. |
+| P10 | **No real statements in the repo, ever.** `.gitignore` all `*.pdf`; use only synthetic test data; notebook outputs are stripped when a notebook is staged (`nbstripout` git filter, set up once per clone with `nbstripout --install`; `.gitattributes` is in the repo), and a test fails if any committed notebook has outputs. The reference notebook must be committed **with outputs cleared**. | The repo is public. |
 
 ### How a user (or reviewer) can verify it
 

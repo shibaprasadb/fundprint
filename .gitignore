@@ -10,3 +10,4 @@ __pycache__/
 dist/
 web/vendor/
 !tests/fixtures/*.pdf
+.claude/
