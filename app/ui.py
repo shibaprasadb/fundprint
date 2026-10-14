@@ -67,6 +67,7 @@ def sidebar_note():
 
 
 OXFORD_BLUE = "#002147"
+FEEDBACK_URL = "https://tally.so/r/2EqQGg"
 
 
 def _bar(html):
@@ -169,6 +170,7 @@ def footer(manifest):
         f'<div style="font-size:0.85rem;margin-top:0.5rem">'
         f'Benchmark data as of {manifest["benchmark"]["latest_date"]} · '
         f'<a href="{REPO_URL}" {link}>Source code</a> · '
+        f'<a href="{FEEDBACK_URL}" target="_blank" rel="noopener noreferrer" {link}>Feedback</a> · '
         f'Built by <a href="https://shibaprasadb.com" {link}>shibaprasadb.com</a></div>'
     )
 
