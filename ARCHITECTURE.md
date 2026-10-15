@@ -84,7 +84,8 @@ Two separate steps are used on purpose: one **builds and tests** the site, a dif
 |---|---|---|
 | Your statement | Your browser only, until you close the tab | Only you |
 | Public fund prices | Inside the website files | Everyone (it's public data) |
-| Visit counter | A simple count of page visits, no personal details | The site owner |
+| Visit counter | Umami: anonymised counts of page visits | The site owner |
+| Feedback you choose to send | Tally, the form service (name, email and screenshot are optional) | The site owner |
 
 ---
 
