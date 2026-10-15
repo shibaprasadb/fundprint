@@ -44,3 +44,14 @@ def test_big_picture_section_ignores_the_scope_toggle():
         captions = [c.value for c in at.caption]
         assert any("the toggle above doesn't change them" in c for c in captions)
         assert any("aren't shown here" in c for c in captions)
+
+
+
+def test_fund_names_never_go_through_markdown():
+    """FP-01: names from the PDF are shown with st.text, never as Markdown or a widget label,
+    so "![x](/path)" can't become an image request and a web address can't become a link."""
+    page = (ROOT / "app/pages/1_Time_in_Market.py").read_text()
+    assert "st.text(s)" in page and 'st.text("\\n".join(f"• {n}"' in page
+    assert 'st.selectbox("Asset class"' in page
+    for widget in ("selectbox", "write", "markdown", "caption", "radio", "checkbox", "expander"):
+        assert not re.search(rf"st\.{widget}\((s|n|name|scheme)\b", page), widget
