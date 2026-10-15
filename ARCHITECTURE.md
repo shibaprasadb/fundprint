@@ -86,6 +86,20 @@ Two separate steps are used on purpose: one **builds and tests** the site, a dif
 | Public fund prices | Inside the website files | Everyone (it's public data) |
 | Visit counter | Umami: anonymised counts of page visits | The site owner |
 | Feedback you choose to send | Tally, the form service (name, email and screenshot are optional) | The site owner |
+| Display settings (light/dark theme, sidebar sections) | Your browser's `localStorage`, saved by Streamlit. Stays after the tab closes | Only you. Holds nothing from your statement |
+
+---
+
+## Known limit: shared web address (accepted risk)
+
+Fundprint lives at `lab.shibaprasadb.com/fundprint`. Browsers keep sites apart by origin (scheme + host + port), not by path, so every page on `lab.shibaprasadb.com` counts as the same site as Fundprint. A page there could open Fundprint in a frame and read what it shows, or install a service worker that changes the files Fundprint runs. GitHub Pages does not let us send the headers (such as `frame-ancestors`) that would block framing.
+
+Nothing exploits this today: the only other page on `lab` is a short static home page with no scripts. We accept the risk on these terms:
+- Other lab projects stay static or self-written, with no third-party scripts and no service worker at the root (`/sw.js`).
+- The `fundprint deploy` key is used only by the publish step.
+- If `lab` ever hosts something with user accounts, user-written content or many outside dependencies, move Fundprint to its own subdomain first.
+
+Found in the independent audit of 15 Oct 2026 (FP-01).
 
 ---
 

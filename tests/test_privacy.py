@@ -113,6 +113,11 @@ def test_password_box_is_emptied_after_every_try():
     assert 'st.form("password", clear_on_submit=True)' in (ROOT / "app/Home.py").read_text()
 
 
+def test_password_box_asks_browser_not_to_save_it():
+    """P9: the browser should not offer to keep the password after the tab closes."""
+    assert 'type="password", autocomplete="off")' in (ROOT / "app/Home.py").read_text()
+
+
 def test_deploy_only_publishes_main():
     """FP-03: a manual deploy from another branch must not publish anything."""
     wf = (ROOT / ".github/workflows/deploy.yml").read_text()

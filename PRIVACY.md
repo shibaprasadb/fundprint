@@ -8,12 +8,12 @@ Fundprint runs entirely in your browser. Your statement is never uploaded to any
 - All reading and analysis happens in the browser. There is no backend.
 - The file is handled in memory only. It is never written to disk.
 - No caching of anything from your statement (caching is used only for public benchmark data).
-- No `localStorage`, `sessionStorage`, IndexedDB or cookies holding statement data.
+- Nothing from your statement goes into `localStorage`, `sessionStorage`, IndexedDB or cookies. The browser does keep two display settings that Streamlit (the toolkit the app is built on) saves in `localStorage`: your light/dark theme choice and which sidebar sections are open. They stay after you close the tab, hold nothing from your statement, and are removed when you clear this site's data.
 - No scripts, fonts or trackers are loaded from other sites. Anonymised visit counts are sent to Umami by a small script served from this site (see Analytics below).
 - A Content-Security-Policy tag stops the page from sending data anywhere except this site and Umami.
 - No network calls while you use the app, other than loading its own files and those anonymised counts.
 - Error messages never show statement data.
-- Your PDF password is used once to open the file, then dropped.
+- Your PDF password is used once to open the file, then dropped. The password box is emptied after every try and is marked `autocomplete="off"`, which asks the browser not to offer to save it. Some browsers and password managers ignore that request; if yours offers to save it, choose "Never".
 - No real statements in this repository; tests use made-up data only.
 
 ## Check it yourself
