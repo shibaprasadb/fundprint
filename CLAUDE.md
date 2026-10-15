@@ -39,6 +39,7 @@ The promise shown in the app, word for word: **"Nothing is stored. Your file is 
 ### Hosting
 - The app is published **only** through the `lab` repo (`lab.shibaprasadb.com/fundprint`).
 - **GitHub Pages stays OFF in this repo.** No `gh-pages` branch, no Pages workflow, no `actions/deploy-pages` here.
+- **Anything else on `lab.shibaprasadb.com` shares Fundprint's origin**, so the browser treats it as the same site and it can read or change Fundprint. Other lab projects must be static or self-written, with no third-party scripts and no service worker at the root. See "Shared web address" in `ARCHITECTURE.md`.
 
 ### Attribution
 - Credit is **shibaprasadb.com** only. No personal name in the app, README, page metadata or code comments.

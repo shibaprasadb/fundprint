@@ -58,8 +58,9 @@ def main():
     if file is not None:
         # Choose the file, type the password, press Enter (or the button): no other clicks.
         # clear_on_submit empties the box after every try, including a failed one (P9).
+        # autocomplete="off" asks the browser not to offer to save the password.
         with st.form("password", clear_on_submit=True):
-            password = st.text_input("Password", type="password")
+            password = st.text_input("Password", type="password", autocomplete="off")
             st.caption("The password you set on the CAMS form.")
             go = st.form_submit_button("Show my results")
         if go:
