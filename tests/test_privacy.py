@@ -94,3 +94,8 @@ def test_feedback_link_is_plain_and_counted_once():
     assert 'ALLOWED_EVENTS = ["click:feedback"]' in js
     assert 'data-before-send="fundprintBeforeSend"' in html
     assert f'href="{url}"' in (ROOT / "app/ui.py").read_text() or url in (ROOT / "app/ui.py").read_text()
+
+
+def test_password_box_is_emptied_after_every_try():
+    """P9: the password must not stay in the box when the statement is rejected."""
+    assert 'st.form("password", clear_on_submit=True)' in (ROOT / "app/Home.py").read_text()
