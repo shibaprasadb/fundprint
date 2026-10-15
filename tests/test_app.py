@@ -53,5 +53,5 @@ def test_fund_names_never_go_through_markdown():
     page = (ROOT / "app/pages/1_Time_in_Market.py").read_text()
     assert "st.text(s)" in page and 'st.text("\\n".join(f"• {n}"' in page
     assert 'st.selectbox("Asset class"' in page
-    for widget in ("selectbox", "write", "markdown", "caption", "radio", "checkbox", "expander"):
+    for widget in ("selectbox", "write", "markdown", "caption", "warning", "radio", "checkbox", "expander"):
         assert not re.search(rf"st\.{widget}\((s|n|name|scheme)\b", page), widget

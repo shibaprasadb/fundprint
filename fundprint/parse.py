@@ -33,7 +33,7 @@ class CasError(Exception):
 @dataclass
 class ParsedCas:
     txns: pd.DataFrame      # one row per transaction that changes units
-    schemes: pd.DataFrame   # one row per fund: folio, scheme, isin, nav, nav_date
+    schemes: pd.DataFrame   # one row per fund: folio, scheme, isin, nav, nav_date, open, close
     period_start: pd.Timestamp | None
     period_end: pd.Timestamp | None
 
@@ -54,22 +54,6 @@ def read_pdf(pdf_bytes, password=""):
     return cas.model_dump() if hasattr(cas, "model_dump") else cas
 
 
-def _starts_mid_way(opening, closing, moves):
-    """True when a fund's history can't be complete: the statement starts after the first purchase.
-
-    Three signs: units already held on the first day, a first transaction that is a sale,
-    or opening units + transactions not adding up to the closing units.
-    """
-    opening = float(opening or 0)
-    if abs(opening) > 0.001:
-        return True
-    if moves and min(moves, key=lambda m: m[0])[1] < 0:  # min keeps statement order for ties
-        return True
-    if closing is not None and abs(opening + sum(u for _, u in moves) - float(closing)) > 0.05:
-        return True
-    return False
-
-
 def from_dict(cas):
     """Flatten casparser's dict into a ParsedCas."""
     kind = cas.get("cas_type")
@@ -77,7 +61,7 @@ def from_dict(cas):
     if kind == "SUMMARY":
         raise CasError("This is a Summary statement. Please request the **Detailed** one (Step 2 below).", step=2)
 
-    txns, schemes, partial = [], [], False
+    txns, schemes = [], []
     for folio in cas.get("folios", []):
         for s in folio.get("schemes", []):
             val = s.get("valuation") or {}
@@ -86,13 +70,15 @@ def from_dict(cas):
             schemes.append({
                 "folio": folio["folio"], "scheme": s["scheme"], "isin": s.get("isin"),
                 "nav": float(val["nav"]), "nav_date": pd.Timestamp(val["date"]),
+                # units held on the statement's first and last day, used by history.py
+                # to spot missing history (open above zero) and funds that don't add up
+                "open": float(s.get("open") or 0),
+                "close": None if s.get("close") is None else float(s["close"]),
             })
-            moves = []   # (date, units) for this fund, to check the history is complete
             for t in s.get("transactions", []):
                 # rows without units (stamp duty, STT, TDS) don't change holdings
                 if t.get("units") is None:
                     continue
-                moves.append((pd.Timestamp(t["date"]), float(t["units"])))
                 tkind = str(getattr(t["type"], "value", t["type"]))
                 amount = float(t.get("amount") or 0)
                 # reinvested dividends came out of the fund's own NAV, not the
@@ -104,14 +90,8 @@ def from_dict(cas):
                     "date": pd.Timestamp(t["date"]), "kind": tkind,
                     "units": float(t["units"]), "amount": amount,
                 })
-            partial = partial or _starts_mid_way(s.get("open"), s.get("close"), moves)
     if not schemes:
         raise CasError("Couldn't find any funds in this statement.", step=1)
-    if partial:
-        raise CasError(
-            "Your statement seems to start after your first investment. "
-            "Request it again with an earlier from-date for accurate results (Step 2 below).", step=2
-        )
 
     period = cas.get("statement_period") or {}
     def _ts(v):

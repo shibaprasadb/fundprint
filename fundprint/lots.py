@@ -30,9 +30,11 @@ def held_lots(txns, schemes, today, edges=BUCKET_EDGES, last=LAST_BUCKET):
     - money out on the purchase date (only the share of units still held)
     - money in on the NAV date: units still held x latest NAV
     Both rows share a `lot` id so they can be kept or dropped together.
+    Units held before the statement starts (`open` in `schemes`) are left out.
     """
     today = pd.Timestamp(today)
     nav = schemes.set_index(["folio", "scheme"])
+    opening = nav["open"].fillna(0).to_dict() if "open" in nav else {}
     rows, lot_id = [], 0
     for (folio, scheme), g in txns.groupby(["folio", "scheme"], sort=False):
         g = g.sort_values("date", kind="stable")
@@ -48,6 +50,11 @@ def held_lots(txns, schemes, today, edges=BUCKET_EDGES, last=LAST_BUCKET):
 
         # Units sold or switched out
         sold = -g.loc[g.units < 0, "units"].sum()
+
+        # Units already held when the statement starts are the oldest lot, with no known
+        # date or cost. Sales use them up first; any left are not returned, because their
+        # return can't be worked out (spec 006).
+        sold = max(sold - opening.get((folio, scheme), 0.0), 0.0)
 
         # First in, first out: the oldest purchases are sold first.
         buys["held"] = (buys.units.cumsum() - sold).clip(lower=0).clip(upper=buys.units)

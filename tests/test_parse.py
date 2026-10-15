@@ -62,7 +62,7 @@ def test_pdf_library_writes_no_debug_logs():
     assert Count.n < 50, f"{Count.n} log lines from the PDF library"
 
 
-# ---- clear errors and partial history -------------------------------------------------------
+# ---- clear errors, and partial history (no longer an error) --------------------------------------
 
 def _cas(open_units=0, close_units=100, txns=((("2022-01-05"), "PURCHASE_SIP", 100.0),), kind="DETAILED"):
     """A tiny made-up casparser dict with one fund, to try the history checks."""
@@ -79,7 +79,9 @@ def _cas(open_units=0, close_units=100, txns=((("2022-01-05"), "PURCHASE_SIP", 1
 
 def test_complete_history_is_accepted():
     from fundprint.parse import from_dict
-    assert len(from_dict(_cas()).txns) == 1
+    p = from_dict(_cas())
+    assert len(p.txns) == 1
+    assert p.schemes[["open", "close"]].iloc[0].tolist() == [0.0, 100.0]
 
 
 @pytest.mark.parametrize("cas", [
@@ -87,11 +89,10 @@ def test_complete_history_is_accepted():
     _cas(close_units=-100, txns=(("2022-01-05", "REDEMPTION", -100.0),)),               # first move is a sale
     _cas(close_units=90),                                                              # units don't add up
 ])
-def test_partial_history_is_a_friendly_error(cas):
+def test_partial_history_no_longer_blocks(cas):
+    """Spec 006: missing history is a warning on the results page, not an error."""
     from fundprint.parse import from_dict
-    with pytest.raises(CasError, match="start after your first investment") as e:
-        from_dict(cas)
-    assert e.value.step == 2
+    assert len(from_dict(cas).schemes) == 1
 
 
 def test_summary_cas_points_to_step_2():
