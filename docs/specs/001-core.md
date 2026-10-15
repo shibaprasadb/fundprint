@@ -1,5 +1,8 @@
 # Fundprint: Product & Build Spec
 
+> **Status:** Implemented
+> **Notes:** Some details were changed by later decisions: the analysis page is called **Time in Market** (not 'Vintage'), and v1 shows no rupee amounts (share-safe mode was dropped). See the Decisions log at the end.
+
 > **Fundprint**: *a CASual look at your mutual fund statement.*
 > Lives at `lab.shibaprasadb.com/fundprint`. Open source. Runs in your browser.
 
@@ -103,7 +106,7 @@ Build a bare stlite page that installs casparser and parses a **synthetic** CAS 
 
 **Spike passes if** a synthetic CAS PDF (password-protected and not) parses to the same `transactions` table in the browser as on desktop Python.
 
-**If the spike fails:** fall back to a server-hosted Streamlit app (Hugging Face Spaces or Render; avoid Community Cloud's 12-hour sleep). Keep rules P2, P3, P8, P9 and P10 and the exact promise line, and replace the "never uploaded" sentence with: *"Your file is processed in memory on the server and discarded when your session ends. Nothing is written to disk or logged."* Raise this with Shiba before switching; don't switch silently.
+**If the spike fails:** fall back to a server-hosted Streamlit app (Hugging Face Spaces or Render; avoid Community Cloud's 12-hour sleep). Keep rules P2, P3, P8, P9 and P10 and the exact promise line, and replace the "never uploaded" sentence with: *"Your file is processed in memory on the server and discarded when your session ends. Nothing is written to disk or logged."* Raise this with the maintainer before switching; don't switch silently.
 
 ### Hosting and URL
 - Target: `https://lab.shibaprasadb.com/fundprint`.
@@ -135,7 +138,7 @@ fundprint/
 ├── README.md                  # leads with the use case (see §10)
 ├── PRIVACY.md                 # the promise, the rules, how to verify
 ├── LICENSE                    # MIT
-├── SPEC.md                    # this file
+├── docs/specs/001-core.md     # this file (was SPEC.md)
 ├── fundprint/                 # core logic: pure Python, no Streamlit imports
 │   ├── parse.py               # CAS → transactions DataFrame
 │   ├── lots.py                # reversals, FIFO, held lots, buckets, cash flows
@@ -217,7 +220,7 @@ Per fund (`key`), sorted by date:
 5. Each held lot gives two cash flows:
    - `(purchase_date, −amount × held / units)`, the cost of the units still held;
    - `(nav_date, held × latest_nav)`, what they're worth now.
-6. **Switches and reinvestment count as fresh purchases** from their own date (Shiba's rule: "start from 0").
+6. **Switches and reinvestment count as fresh purchases** from their own date (the maintainer's rule: "start from 0").
 
 ### 6.4 Buckets
 - Age = `(today − purchase_date).days / 365.25`.
@@ -335,7 +338,7 @@ Code comments: plain English, explain *why* rather than *what*.
 
 | # | Milestone | Done when |
 |---|---|---|
-| M0 | **Browser spike** | Synthetic CAS parses in stlite (§3), or the fallback is agreed with Shiba |
+| M0 | **Browser spike** | Synthetic CAS parses in stlite (§3), or the fallback is agreed with the maintainer |
 | M1 | Core logic + tests | `fundprint/` passes all §9 unit tests; matches the notebook on the same synthetic data |
 | M2 | Data pipeline | `refresh-data.yml` produces `data/*.json`; fail-safe works |
 | M3 | Streamlit UI (local) | Home + Time in Market work with `streamlit run`; no rupee amounts anywhere (no-rupee test passes) |

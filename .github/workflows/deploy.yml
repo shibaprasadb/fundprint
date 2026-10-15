@@ -1,6 +1,6 @@
 name: deploy
 # Builds the static site and pushes it into the separate `lab` repo (the only place the app is
-# published). Never turn on GitHub Pages in THIS repo: see SPEC.md section 3.
+# published). Never turn on GitHub Pages in THIS repo: see docs/specs/001-core.md section 3.
 #
 # Two jobs on purpose: `build` runs all the third-party Python (installs, tests, downloads) and never
 # sees a secret. `deploy` holds the deploy key and runs no Python and no script from this repo.

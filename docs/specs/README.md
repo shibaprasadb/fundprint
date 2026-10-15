@@ -1,0 +1,12 @@
+# Specs
+
+Design specs for Fundprint, numbered in the order they were written.
+Each file starts with a Status line. Superseded parts are kept as history.
+
+| # | Spec | Status |
+|---|---|---|
+| 001 | [Core app](001-core.md) | Implemented |
+| 002 | [Umami analytics](002-umami.md) | Partly implemented |
+| 003 | [Simpler onboarding](003-onboarding.md) | Implemented |
+| 004 | [Feedback link](004-feedback.md) | Implemented |
+| 005 | [Two new insights (funds vs index twin; periodicity)](005-insights.md) | Implemented |

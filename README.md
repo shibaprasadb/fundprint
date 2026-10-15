@@ -3,7 +3,11 @@
 *A CASual look at your mutual fund statement.*
 
 ## Why this exists
-Indian DIY mutual fund investors get one portfolio XIRR from their fund app. That number blends money invested five years ago with money invested last month, so it can't say whether your older money is doing well or your newer money is dragging, and it never says whether a plain index fund would have done better. Fundprint breaks your returns down by how long each purchase has been held, and compares each group with what the same purchases on the same dates would have earned in a Nifty 50 index fund.
+Indian DIY mutual fund investors get one portfolio XIRR from their fund app. That number blends money invested five years ago with money invested last month, so it can't say what is really driving your returns, and it never says whether a plain index fund would have done better. Fundprint reads your CAMS/KFintech statement in your browser and looks at your returns in four ways:
+- **By time held.** Returns for each holding-period bucket (under 1 year, 1-3, 3-5, 5+), against the same purchases replayed into a Nifty 50 index fund.
+- **Fund by fund.** Which of your equity funds are ahead of or behind their Nifty 50 twin (the same purchases on the same dates), and how much of your equity money each one holds.
+- **How regularly you invest.** What share of your purchases followed a regular monthly pattern, and your usual investing day, shown against the Nifty 50.
+- **Easy to try.** Start with a made-up sample portfolio, or follow the step-by-step guide to request your own statement. Percentages only, no rupee amounts, and nothing leaves your browser.
 
 ## Your data stays with you
 **Nothing is stored. Your file is read and dropped when you close the tab.**
@@ -16,7 +20,7 @@ The live page counts visits with [Umami](https://umami.is), to see how many peop
 `web/umami.js` is an unedited copy of `https://cloud.umami.is/script.js`, copied on 14 Oct 2026. Umami is MIT licensed. To update it: download the new file, read it in full (what it sends and where), replace the copy, and update the hash in `tests/test_privacy.py`.
 
 ## What it shows
-Per holding-period bucket (<1Y, 1-3Y, 3-5Y, 5Y+): share of your money, XIRR, absolute return, and the gap to the Nifty 50. Percentages only, no rupee amounts, so every screen is safe to screenshot.
+Per holding-period bucket (<1Y, 1-3Y, 3-5Y, 5Y+): share of your money, XIRR, absolute return, and the gap to the Nifty 50. Then two whole-portfolio charts: each equity fund against its Nifty 50 twin, and how regular your investing has been. Percentages only, no rupee amounts, so every screen is safe to screenshot.
 
 ## How it's calculated
 1. Read the Detailed CAS (CAMS/KFintech) with [casparser](https://github.com/codereverie/casparser).
@@ -63,6 +67,8 @@ The Home page checklist shows `app/assets/cams_form_annotated.png`. To make a ne
 
 ## Disclaimer
 Fundprint is an analytics tool, not investment advice. Past returns don't predict future returns. Fundprint is not affiliated with CAMS, KFintech, AMFI, or any fund house. Benchmark: UTI Nifty 50 Index Fund – Direct Growth, using public NAV data.
+
+Design notes and specs: see [docs/specs](docs/specs/).
 
 ## Licence
 MIT
