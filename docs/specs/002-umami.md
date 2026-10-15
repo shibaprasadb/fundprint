@@ -1,7 +1,7 @@
 # Fundprint: Add Umami analytics
 
 > **Status:** Partly implemented
-> **Notes:** Only the visit counter (page views) and one event, `click:feedback`, are live. The 11-event click allowlist, the `data-tag`, Do Not Track and clean-URL settings, and the footer line are not built. The counter is a fixed copy in `web/umami.js` (not loaded from the Umami host), and the filter lives in `web/feedback.js`, not `index.html`.
+> **Notes:** Only the visit counter (page views) and one event, `click:feedback`, are live. The 11-event click allowlist, the `data-tag` and clean-URL settings, and the footer line are not built. The counter is a fixed copy in `web/umami.js` (not loaded from the Umami host), and the filter lives in `web/feedback.js`, not `index.html`.
 
 A small add-on task for the live app at `lab.shibaprasadb.com/fundprint`. The rest of the app is already built; change only what this file describes.
 
@@ -35,7 +35,6 @@ Add this to the `<head>` of the page that mounts stlite. The `fundprintBeforeSen
   data-website-id="<website-id>"
   data-domains="lab.shibaprasadb.com"
   data-tag="lab"
-  data-do-not-track="true"
   data-exclude-search="true"
   data-exclude-hash="true"
   data-before-send="fundprintBeforeSend"></script>
@@ -45,7 +44,6 @@ Add this to the `<head>` of the page that mounts stlite. The `fundprintBeforeSen
 |---|---|
 | `data-domains` | Only tracks on the live site, not on localhost or preview builds. |
 | `data-tag` | Marks every lab event as `lab`, so lab traffic can be separated from the main site in the shared dashboard. |
-| `data-do-not-track` | Respects the visitor's browser Do Not Track setting. |
 | `data-exclude-search`, `data-exclude-hash` | Keeps URLs clean; nothing extra rides along in the address. |
 | `data-before-send` | Safety filter (§4). |
 
@@ -134,7 +132,6 @@ Add a short "Analytics" section saying:
 - what Umami is and why it's used (to see which features people use);
 - the exact event list from §3;
 - that no statement data, file details or results are ever sent;
-- that Do Not Track is respected;
 - how to verify: Network tab shows only small requests to `<umami-host>`.
 
 ### Release checklist / tests
@@ -153,4 +150,3 @@ Replace "zero network requests after load" with:
 - [ ] Uploading a synthetic CAS and running every page sends no event containing statement-related information.
 - [ ] The CSP allows only `'self'` and `<umami-host>`.
 - [ ] Privacy text, footer, PRIVACY.md and README updated.
-- [ ] With Do Not Track turned on in the browser, no Umami requests are sent.
