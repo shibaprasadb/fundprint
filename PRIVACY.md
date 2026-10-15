@@ -4,6 +4,8 @@
 
 Fundprint runs entirely in your browser. Your statement is never uploaded to any server.
 
+"Nothing is stored" is about Fundprint: there is no Fundprint server, and nothing from your file is kept by the app or sent anywhere. Your own browser may still keep a few things, depending on its settings, such as the pages you visited, a password it offers to save, or the display settings described below. None of these hold your statement, and you control them in your browser.
+
 ## The rules the code follows
 - All reading and analysis happens in the browser. There is no backend.
 - The file is handled in memory only. It is never written to disk.
