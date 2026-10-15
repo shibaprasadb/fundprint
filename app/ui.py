@@ -130,6 +130,19 @@ def _form_image():
     )
 
 
+# Step 2 of the checklist: how to fill in the CAMS form. Also shown under the missing-history warning.
+STEP_2_TABLE = """
+| Field | Choose | Note |
+|---|---|---|
+| ① Statement type | **Detailed** (includes transaction listing) | **Required.** A Summary statement won't work. |
+| ② Period / from date | **A date before your first-ever investment** | Earlier is fine. Missing history makes results wrong. |
+| To date | Today | |
+| Folio listing | Any option | All work. |
+| Email + PAN | Yours | The PDF is emailed to you. |
+| ③ Password | **Something simple you'll remember** | You'll type it here once. Fundprint never stores it. |
+"""
+
+
 def cas_checklist():
     """Four steps to request a Detailed statement from CAMS. Plain words: 'statement', not 'CAS'."""
     st.subheader("Don't have your statement yet?")
@@ -142,16 +155,7 @@ def cas_checklist():
     st.caption("Fundprint stays open in this tab.")
 
     _step(2, "Fill in the form like this")
-    st.markdown("""
-| Field | Choose | Note |
-|---|---|---|
-| ① Statement type | **Detailed** (includes transaction listing) | **Required.** A Summary statement won't work. |
-| ② Period / from date | **A date before your first-ever investment** | Earlier is fine. Missing history makes results wrong. |
-| To date | Today | |
-| Folio listing | Any option | All work. |
-| Email + PAN | Yours | The PDF is emailed to you. |
-| ③ Password | **Something simple you'll remember** | You'll type it here once. Fundprint never stores it. |
-""")
+    st.markdown(STEP_2_TABLE)
     _form_image()
 
     _step(3, "Check your email")
@@ -161,6 +165,20 @@ def cas_checklist():
     _step(4, "Come back and upload it")
     st.markdown("Upload the PDF above and type the password you just set.")
     st.caption("Already have a CAS from KFintech or CAMS? That works too, as long as it's the Detailed one.")
+
+
+def history_warning(text):
+    """The missing-history / doesn't-add-up warning (spec 006). It never blocks the results.
+
+    `text` comes from fundprint.history.warning_text, which escapes the fund names.
+    """
+    st.warning(text)
+    if "history is missing" in text:
+        with st.expander("How to do this"):
+            st.markdown("Request a new statement from CAMS and set the **from date** before your first-ever "
+                        "investment. Fill in the form like this:")
+            st.markdown(STEP_2_TABLE)
+            st.link_button("Open CAMS statement page ↗", CAMS_URL)   # opens in a new tab
 
 
 def footer(manifest):

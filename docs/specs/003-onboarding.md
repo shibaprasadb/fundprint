@@ -1,7 +1,7 @@
 # Fundprint: Simpler onboarding
 
 > **Status:** Implemented
-> **Notes:** Small differences: the sample banner has no emoji, and its link goes to the top of Home rather than to the 'Use your own statement' section.
+> **Notes:** Small differences: the sample banner has no emoji, and its link goes to the top of Home rather than to the 'Use your own statement' section. The "Partial history detected" error row is replaced by [006](006-partial-history.md): it is now a warning on the results page, not an error.
 
 An add-on task for the live app at `lab.shibaprasadb.com/fundprint`. Change only what this file describes. All existing privacy rules still apply; in particular, nothing here may store anything in the browser or send anything anywhere.
 
@@ -104,7 +104,7 @@ Then show the page URL in a code block (`st.code("https://lab.shibaprasadb.com/f
 | Wrong password | "That password didn't open the file. It's the one you set on the CAMS form." |
 | Summary CAS | "This is a Summary statement. Please request the **Detailed** one (Step 2 below)." |
 | Not a CAS / unreadable | "Couldn't read this file. Is it a CAMS or KFintech statement PDF?" |
-| Partial history detected (first transaction is a redemption or units don't add up) | "Your statement seems to start after your first investment. Request it again with an earlier from-date for accurate results." |
+| ~~Partial history detected (first transaction is a redemption or units don't add up)~~ | ~~"Your statement seems to start after your first investment. Request it again with an earlier from-date for accurate results."~~ Replaced by 006: now a non-blocking warning on the results page. |
 
 Each error message links or scrolls to the relevant checklist step.
 

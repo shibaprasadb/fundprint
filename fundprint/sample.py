@@ -56,7 +56,8 @@ def sample_cas(today=None, seed=7):
                          "kind": "REDEMPTION", "units": -units, "amount": -units * navs[d]})
         txns += rows
         schemes.append({"folio": folio, "scheme": name, "isin": isin,
-                        "nav": float(navs.iloc[-1]), "nav_date": today})
+                        "nav": float(navs.iloc[-1]), "nav_date": today,
+                        "open": 0.0, "close": sum(r["units"] for r in rows)})
     return ParsedCas(pd.DataFrame(txns), pd.DataFrame(schemes), min(first_dates), today)
 
 

@@ -8,6 +8,7 @@ import ui
 from fundprint.benchmark import compare, load_bench
 from fundprint.charts import allocation_chart, facet_chart, gaps_chart, periodicity_chart
 from fundprint.classify import ASSET_CLASSES, UNCLASSIFIED, classify_isin
+from fundprint.history import history_issues, warning_text
 from fundprint.insights import fund_gaps, periodicity
 from fundprint.lots import held_lots
 from fundprint.xirr import xirr
@@ -36,6 +37,10 @@ def main():
 
     if st.session_state.get("is_sample"):
         ui.sample_banner()
+
+    issues = history_issues(parsed)
+    if issues:
+        ui.history_warning(warning_text(issues))
 
     cats = st.session_state["categories"]
     overrides = st.session_state.setdefault("class_overrides", {})
@@ -137,6 +142,7 @@ def main():
     with st.expander("How this is calculated"):
         st.markdown("""
     - **Held units only.** Each purchase is kept as a lot. Units you sold are taken from the oldest lots first (first in, first out). Bounced SIPs are removed, and reinvested dividends count as free units bought on their own date.
+    - **Missing history.** If your statement starts after your first investment in a fund, the units you already held at the start are left out, because their purchase date and cost aren't in the statement.
     - **Buckets.** Each lot goes into a bucket by how long ago it was bought: under 1 year, 1-3, 3-5, and 5+ years.
     - **XIRR.** For each bucket we line up the money you put in (on each purchase date) against what those units are worth today, and find the yearly rate that connects them.
     - **Nifty 50 replay.** We take the same amounts on the same dates and imagine they went into a Nifty 50 index fund instead. Same cash flows, different fund, so the gap is about the fund and not about timing.
