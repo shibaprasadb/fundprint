@@ -56,8 +56,21 @@ def test_policy_script_src_has_no_outside_address():
     assert "https:" not in script_src, script_src
 
 
-def test_umami_tag_only_counts_the_live_site():
-    assert 'data-domains="lab.shibaprasadb.com"' in (ROOT / "web/index.html").read_text()
+def test_umami_only_counts_the_live_site():
+    assert '"data-domains", "lab.shibaprasadb.com"' in (ROOT / "web/feedback.js").read_text()
+
+
+def test_umami_can_only_start_after_the_filter():
+    """FP-06: feedback.js defines the filter, then loads umami.js. Nothing else loads umami.js,
+    so if feedback.js fails to load, Umami never starts and nothing is sent unfiltered."""
+    import re
+    for f in [ROOT / "web/index.html", *(ROOT / "lab-template").rglob("*.html")]:
+        html = f.read_text()
+        assert not re.search(r"src=[\"'][^\"']*umami\.js", html), f
+        assert "feedback.js" in html, f
+    js = (ROOT / "web/feedback.js").read_text()
+    assert js.index("window.fundprintBeforeSend =") < js.index('"umami.js"')
+    assert '"data-before-send", "fundprintBeforeSend"' in js
 
 
 def test_umami_script_is_the_reviewed_copy():
@@ -92,5 +105,15 @@ def test_feedback_link_is_plain_and_counted_once():
     assert "<iframe" not in html and "tally.so" not in html.split("Content-Security-Policy")[1].split(">")[0]
     js = (ROOT / "web/feedback.js").read_text()
     assert 'ALLOWED_EVENTS = ["click:feedback"]' in js
-    assert 'data-before-send="fundprintBeforeSend"' in html
     assert f'href="{url}"' in (ROOT / "app/ui.py").read_text() or url in (ROOT / "app/ui.py").read_text()
+
+
+def test_password_box_is_emptied_after_every_try():
+    """P9: the password must not stay in the box when the statement is rejected."""
+    assert 'st.form("password", clear_on_submit=True)' in (ROOT / "app/Home.py").read_text()
+
+
+def test_deploy_only_publishes_main():
+    """FP-03: a manual deploy from another branch must not publish anything."""
+    wf = (ROOT / ".github/workflows/deploy.yml").read_text()
+    assert wf.count("github.ref == 'refs/heads/main'") == 2   # once on build, once on deploy

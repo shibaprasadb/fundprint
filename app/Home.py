@@ -56,8 +56,9 @@ def main():
     file = st.file_uploader("Your statement (PDF)", type="pdf")
     done = False
     if file is not None:
-        # Choose the file, type the password, press Enter (or the button): no other clicks
-        with st.form("password"):
+        # Choose the file, type the password, press Enter (or the button): no other clicks.
+        # clear_on_submit empties the box after every try, including a failed one (P9).
+        with st.form("password", clear_on_submit=True):
             password = st.text_input("Password", type="password")
             st.caption("The password you set on the CAMS form.")
             go = st.form_submit_button("Show my results")

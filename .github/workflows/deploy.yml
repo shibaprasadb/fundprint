@@ -15,15 +15,17 @@ permissions:
   contents: read
 jobs:
   build:
+    # Only main is ever published. A manual deploy started from any other branch does nothing.
     # A deploy started by the refresh only runs when that refresh succeeded, ran on main in this
-    # repo, and was started by the schedule or by hand. Pushes and manual deploys run as before.
+    # repo, and was started by the schedule or by hand.
     if: >-
-      github.event_name != 'workflow_run' ||
+      github.ref == 'refs/heads/main' &&
+      (github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.head_repository.full_name == github.repository &&
        (github.event.workflow_run.event == 'schedule' ||
-        github.event.workflow_run.event == 'workflow_dispatch'))
+        github.event.workflow_run.event == 'workflow_dispatch')))
     runs-on: ubuntu-latest
     outputs:
       file_count: ${{ steps.count.outputs.file_count }}
@@ -45,6 +47,7 @@ jobs:
         with: {name: site, path: dist, retention-days: 1, if-no-files-found: error}
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main'   # checked again here, next to the deploy key
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0

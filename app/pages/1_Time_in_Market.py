@@ -47,7 +47,11 @@ def main():
     if len(unclassified):
         with st.expander(f"{len(unclassified)} fund(s) couldn't be classified. Set them here."):
             for f, s in zip(unclassified.folio, unclassified.scheme):
-                choice = st.selectbox(s, [UNCLASSIFIED] + ASSET_CLASSES, key=f"cls_{f}_{s}")
+                # Fund names come from the PDF, so they are shown with st.text, which never reads
+                # Markdown or makes links. Widget labels would (FP-01), so the label stays fixed.
+                st.text(s)
+                choice = st.selectbox("Asset class", [UNCLASSIFIED] + ASSET_CLASSES, key=f"cls_{f}_{s}",
+                                      label_visibility="collapsed")
                 if choice != UNCLASSIFIED:
                     overrides[(f, s)] = choice
                     schemes.loc[(schemes.folio == f) & (schemes.scheme == s), "asset_class"] = choice
@@ -73,7 +77,7 @@ def main():
         keep = schemes[schemes.asset_class == "Equity"]
         cf = cf.merge(keep[["folio", "scheme"]], on=["folio", "scheme"])
         with st.expander("Funds included"):
-            st.write("\n".join(f"- {n}" for n in sorted(keep.scheme)))
+            st.text("\n".join(f"• {n}" for n in sorted(keep.scheme)))   # plain text, see above
     label = "Equity funds" if scope != "All funds" else "All funds"
 
     if cf.empty:

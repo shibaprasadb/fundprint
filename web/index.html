@@ -9,7 +9,7 @@
        'unsafe-eval', 'wasm-unsafe-eval' and data: scripts are needed by Python-in-the-browser (its worker
        starts from a data: URL). What protects your file is connect-src: requests can only go to this site
        or to Umami, which counts anonymous visits. The counter script is a fixed copy kept in this repo
-       (umami.js), so no script is loaded from another site. gateway.umami.is receives the counts. -->
+       (umami.js, loaded by feedback.js), so no script is loaded from another site. gateway.umami.is receives the counts. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data: https://gateway.umami.is; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <link rel="stylesheet" href="./vendor/stlite/stlite.css">
   <style>
@@ -29,8 +29,8 @@
     #feedback-link:hover, #feedback-link:focus-visible { background: #0A3A70; }
     @media (max-width: 640px) { #feedback-link { top: 0.6rem; right: 3.6rem; padding: 0.2rem 0.65rem; font-size: 0.75rem; } }
   </style>
-  <!-- Umami Analytics: counts visits, nothing else -->
-  <script defer src="./umami.js" data-website-id="2e67cd5c-f499-4fba-a139-481c5adb30c4" data-domains="lab.shibaprasadb.com" data-before-send="fundprintBeforeSend"></script>
+  <!-- Umami Analytics: counts visits, nothing else. feedback.js sets up the filter first and then
+       starts the Umami counter itself, so it can never run without the filter. -->
   <script defer src="./feedback.js"></script>
 </head>
 <body>

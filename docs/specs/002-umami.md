@@ -1,7 +1,7 @@
 # Fundprint: Add Umami analytics
 
 > **Status:** Partly implemented
-> **Notes:** Only the visit counter (page views) and one event, `click:feedback`, are live. The 11-event click allowlist, the `data-tag` and clean-URL settings, and the footer line are not built. The counter is a fixed copy in `web/umami.js` (not loaded from the Umami host), and the filter lives in `web/feedback.js`, not `index.html`.
+> **Notes:** Only the visit counter (page views) and one event, `click:feedback`, are live. The 11-event click allowlist, the `data-tag` and clean-URL settings, and the footer line are not built. The counter is a fixed copy in `web/umami.js` (not loaded from the Umami host), and the filter lives in `web/feedback.js`, not `index.html`. `feedback.js` also loads `umami.js` itself, after the filter is set up, so the counter never runs without the filter (§2's script tag is not used).
 
 A small add-on task for the live app at `lab.shibaprasadb.com/fundprint`. The rest of the app is already built; change only what this file describes.
 
