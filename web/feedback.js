@@ -1,6 +1,8 @@
-// Feedback link counting and the Umami filter.
+// Feedback link counting, the Umami filter, and starting Umami.
 // Clicking a link to the feedback form counts one anonymous event: no extra details.
 // Umami calls fundprintBeforeSend before every send; only the events listed here may leave the page.
+// This file is the only thing that loads umami.js, and only after the filter exists. If this file
+// fails to load, Umami never starts, so nothing can be sent without the filter.
 (function () {
   "use strict";
   var FORM_URL = "https://tally.so/r/2EqQGg";
@@ -22,4 +24,12 @@
     if (!link || link.getAttribute("href") !== FORM_URL) return;
     if (window.umami && typeof window.umami.track === "function") window.umami.track("click:feedback");
   }, true);
+
+  // Start Umami now that the filter is in place. umami.js sits next to this file.
+  var umami = document.createElement("script");
+  umami.src = new URL("umami.js", document.currentScript.src).href;
+  umami.setAttribute("data-website-id", "2e67cd5c-f499-4fba-a139-481c5adb30c4");
+  umami.setAttribute("data-domains", "lab.shibaprasadb.com");
+  umami.setAttribute("data-before-send", "fundprintBeforeSend");
+  document.head.appendChild(umami);
 })();
