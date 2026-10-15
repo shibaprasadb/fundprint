@@ -11,7 +11,7 @@ Indian DIY mutual fund investors get one portfolio XIRR from their fund app. Tha
 Fundprint runs entirely in your browser. Your statement is never uploaded to any server. See [PRIVACY.md](PRIVACY.md) for the rules and how to check them yourself: open DevTools → Network, upload a statement, and watch that your file is never sent anywhere.
 
 ## Analytics
-The live page counts anonymous visits with [Umami](https://umami.is), to see how many people use it. No cookies, no personal data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
+The live page counts visits with [Umami](https://umami.is), to see how many people use it. No cookies, only anonymised visit data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).
 
 `web/umami.js` is an unedited copy of `https://cloud.umami.is/script.js`, copied on 14 Oct 2026. Umami is MIT licensed. To update it: download the new file, read it in full (what it sends and where), replace the copy, and update the hash in `tests/test_privacy.py`.
 
