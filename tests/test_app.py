@@ -55,3 +55,14 @@ def test_fund_names_never_go_through_markdown():
     assert 'st.selectbox("Asset class"' in page
     for widget in ("selectbox", "write", "markdown", "caption", "warning", "radio", "checkbox", "expander"):
         assert not re.search(rf"st\.{widget}\((s|n|name|scheme)\b", page), widget
+
+
+def test_python_starts_without_stack_switching():
+    """Spec 007: iPhone browsers crash Pyodide when it uses stack switching, so boot.js starts Python
+    through pyodide-start.mjs, which hides that feature first. The build must ship that file."""
+    web = ROOT / "web"
+    assert 'pyodideUrl: here("./pyodide-start.mjs")' in (web / "boot.js").read_text()
+    start = (web / "pyodide-start.mjs").read_text()
+    assert "delete WebAssembly.Suspending" in start and "delete WebAssembly.Suspender" in start
+    build = (ROOT / "scripts" / "build_web.py").read_text()
+    assert '"pyodide-start.mjs"' in build

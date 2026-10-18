@@ -1,6 +1,7 @@
 """Bits shared by every page: the promise banner, footer, public data loading."""
 import base64
 import json
+import logging
 import sys
 import traceback
 from pathlib import Path
@@ -61,6 +62,18 @@ h3[id^="step-"]{font-size:1.25rem}
 </style>"""
 
 
+def quiet_logs():
+    """Keep only warnings and errors in the log.
+
+    The browser build sets the root logger to DEBUG and sends every line to the page.
+    Matplotlib and Pillow then write hundreds of lines for each chart, which is real
+    work on a phone and can stall or crash the tab.
+    """
+    logging.getLogger().setLevel(logging.WARNING)
+    for name in ("matplotlib", "PIL"):
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
 def prepare_charts():
     """Load the chart code and build Matplotlib's font cache.
 
@@ -68,6 +81,8 @@ def prepare_charts():
     note stays up until then. A later call does almost nothing. This touches no user data.
     """
     import io
+
+    quiet_logs()
 
     import fundprint.charts  # sets the in-memory backend before any figure is drawn
     import fundprint.insights  # noqa: F401
@@ -81,6 +96,7 @@ def prepare_charts():
 
 
 def sidebar_note():
+    quiet_logs()
     st.markdown(CSS, unsafe_allow_html=True)
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 

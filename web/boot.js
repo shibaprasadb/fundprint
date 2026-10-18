@@ -29,7 +29,7 @@ mount(
     entrypoint: "Home.py",
     files,
     // Python itself and its big packages come from our own site, not a CDN
-    pyodideUrl: here("./vendor/pyodide/pyodide.mjs"),
+    pyodideUrl: here("./pyodide-start.mjs"),   // turns off a feature that crashes iPhone browsers
     // Everything is installed by name from ./vendor/pyodide/pyodide-lock.json, which also lists our
     // own pure-Python wheels. casparser lists no rapidfuzz there (it has no browser build);
     // rapidfuzz/ in the app is a small stand-in.
