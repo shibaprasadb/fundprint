@@ -11,3 +11,4 @@ Each file starts with a Status line. Superseded parts are kept as history.
 | 004 | [Feedback link](004-feedback.md) | Implemented |
 | 005 | [Two new insights (funds vs index twin; periodicity)](005-insights.md) | Implemented |
 | 006 | [Partial history: warn, don't block](006-partial-history.md) | Implemented |
+| 007 | [Mobile: don't freeze on the first tap](007-mobile.md) | Implemented |

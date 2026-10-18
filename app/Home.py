@@ -1,4 +1,6 @@
 """Landing page: the privacy promise, sample data first, then upload and the request-a-statement checklist."""
+import time
+
 import pandas as pd
 import streamlit as st
 
@@ -15,6 +17,7 @@ def read_statement(file, password, cats):
     """Open the file and keep the result in memory. Returns True when it worked."""
     try:
         with st.spinner("Reading your statement…"):
+            time.sleep(0.1)  # so the spinner can paint before the PDF read blocks
             parsed = parse_cas(file.getvalue(), password)
     except CasError as e:
         ui.show_error(str(e), e.step)
@@ -29,6 +32,7 @@ def read_statement(file, password, cats):
 
 
 def main():
+    ui.prepare_charts()  # before any widget, so this runs under the loading note
     ui.sidebar_note()
     bench, cats, manifest = ui.load_public_data()
 

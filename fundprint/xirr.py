@@ -3,7 +3,6 @@
 Day count is actual days / 365, the same as Excel and pyxirr.
 """
 import numpy as np
-from scipy.optimize import brentq
 
 
 def xirr(dates, amounts):
@@ -47,8 +46,34 @@ def xirr(dates, amounts):
             return float(r_new)
         r = r_new
 
-    # Fallback: bracket search, slower but reliable
+    # Fallback: find a root by halving the range. Same bounds the old solver used.
+    return _bracket(npv, -0.999999, 100.0)
+
+
+def _bracket(npv, lo, hi):
+    """A root of npv between lo and hi, or NaN when the ends do not change sign."""
     try:
-        return float(brentq(npv, -0.999999, 100.0, xtol=1e-12, maxiter=500))
-    except (ValueError, RuntimeError):
+        flo, fhi = npv(lo), npv(hi)
+    except (ArithmeticError, OverflowError, ValueError):
         return float("nan")
+    if not np.isfinite(flo) or not np.isfinite(fhi) or flo * fhi > 0:
+        return float("nan")
+    if flo == 0.0:
+        return float(lo)
+    for _ in range(80):
+        if hi - lo < 1e-12:
+            break
+        mid = (lo + hi) / 2.0
+        try:
+            fm = npv(mid)
+        except (ArithmeticError, OverflowError, ValueError):
+            return float("nan")
+        if not np.isfinite(fm):
+            return float("nan")
+        if fm == 0.0:
+            return float(mid)
+        if flo * fm < 0:
+            hi = mid
+        else:
+            lo, flo = mid, fm
+    return float((lo + hi) / 2.0)

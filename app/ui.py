@@ -61,6 +61,25 @@ h3[id^="step-"]{font-size:1.25rem}
 </style>"""
 
 
+def prepare_charts():
+    """Load the chart code and build Matplotlib's font cache.
+
+    Python cannot redraw while this runs, so call it before the first widget. The loading
+    note stays up until then. A later call does almost nothing. This touches no user data.
+    """
+    import io
+
+    import fundprint.charts  # sets the in-memory backend before any figure is drawn
+    import fundprint.insights  # noqa: F401
+    import fundprint.xirr  # noqa: F401
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure(figsize=(1, 1))
+    fig.text(0.5, 0.5, "Fundprint")
+    fig.savefig(io.BytesIO(), format="png", dpi=72)
+    plt.close(fig)
+
+
 def sidebar_note():
     st.markdown(CSS, unsafe_allow_html=True)
     st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
