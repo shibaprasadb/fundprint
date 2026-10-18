@@ -32,7 +32,7 @@ PYODIDE_BASE = f"https://cdn.jsdelivr.net/pyodide/v{PYODIDE}/full"
 # packages we ask Pyodide for; their own dependencies are added automatically.
 # This list is Streamlit's needs (seen in the browser console) plus ours.
 PYODIDE_PACKAGES = [
-    "micropip", "packaging", "pandas", "numpy", "scipy", "matplotlib", "pydantic", "python-dateutil",
+    "micropip", "packaging", "pandas", "numpy", "matplotlib", "pydantic", "python-dateutil",
     "sqlite3", "click", "rich", "cryptography", "charset-normalizer", "pyarrow", "altair",
     "Pillow", "fastparquet", "jsonschema", "Jinja2", "starlette", "anyio", "narwhals",
     "pyodide-http", "typing-extensions", "tornado", "pygments", "ssl", "openssl", "libopenblas",

@@ -1,7 +1,7 @@
 # Fundprint: Product & Build Spec
 
 > **Status:** Implemented
-> **Notes:** Some details were changed by later decisions: the analysis page is called **Time in Market** (not 'Vintage'), and v1 shows no rupee amounts (share-safe mode was dropped). See the Decisions log at the end.
+> **Notes:** Some details were changed by later decisions: the analysis page is called **Time in Market** (not 'Vintage'), and v1 shows no rupee amounts (share-safe mode was dropped). The XIRR fallback is our own bracket search, not SciPy (see 007). See the Decisions log at the end.
 
 > **Fundprint**: *a CASual look at your mutual fund statement.*
 > Lives at `lab.shibaprasadb.com/fundprint`. Open source. Runs in your browser.
@@ -102,7 +102,7 @@ Build a bare stlite page that installs casparser and parses a **synthetic** CAS 
 | `casparser-isin` → `rapidfuzz` | **No wasm build** | Install casparser with `deps=False`, install its other deps one by one, and provide a tiny stub `rapidfuzz` module (`fuzz`, `process`, `utils` with no-op functions) so imports succeed. The fuzzy path only runs when a statement is missing ISINs, and we handle that ourselves (§6.2). |
 | `pyxirr` (Rust) | No wasm build | Replace with our own `xirr()` (§6.6). Keep `pyxirr` only as a test oracle in CI. |
 | `click`, `rich`, `colorama`, `python-dateutil`, `pydantic` | Pure Python, or in Pyodide | Install via micropip. |
-| `pandas`, `numpy`, `scipy`, `matplotlib` | In Pyodide | Load from the Pyodide distribution. |
+| `pandas`, `numpy`, `matplotlib` | In Pyodide | Load from the Pyodide distribution. |
 
 **Spike passes if** a synthetic CAS PDF (password-protected and not) parses to the same `transactions` table in the browser as on desktop Python.
 
@@ -235,7 +235,7 @@ Compute `invested`, `value`, `xirr_%`, `abs_%` (= value / invested − 1), and `
 ### 6.6 XIRR (`xirr.py`): our own, no pyxirr
 - Day count: actual days / 365 (ACT/365F, the same as Excel and pyxirr).
 - Exactly 2 cash flows → closed form: `r = (CF1 / −CF0)^(1/t) − 1`.
-- Otherwise: Newton–Raphson from `guess = clamp(Σinflows / Σ|outflows| − 1, −0.9, 0.1)`, tolerance 1e-9, max 50 steps; if that fails, `scipy.optimize.brentq` on `[−0.999999, 100]`; if that fails, return NaN and show "n/a".
+- Otherwise: Newton–Raphson from `guess = clamp(Σinflows / Σ|outflows| − 1, −0.9, 0.1)`, tolerance 1e-9, max 50 steps; if that fails, a bracket search on `[−0.999999, 100]`; if that fails, return NaN and show "n/a".
 - **Tests must match pyxirr to 1e-6** on a range of random and edge-case cash flows (pyxirr is installed in CI only).
 
 ### 6.7 Benchmark replay (`benchmark.py`), from the notebook's `vs_nifty()`

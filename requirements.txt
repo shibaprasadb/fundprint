@@ -2,6 +2,5 @@ casparser==0.8.1   # 1.x needs pypdfium2, which has no wheel for the browser Pyt
 pdfminer.six==20240706
 pandas
 numpy
-scipy
 matplotlib
 streamlit

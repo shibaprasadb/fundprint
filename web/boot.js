@@ -33,7 +33,7 @@ mount(
     // Everything is installed by name from ./vendor/pyodide/pyodide-lock.json, which also lists our
     // own pure-Python wheels. casparser lists no rapidfuzz there (it has no browser build);
     // rapidfuzz/ in the app is a small stand-in.
-    requirements: ["casparser", "pydantic", "python-dateutil", "scipy", "matplotlib", "sqlite3", "click",
+    requirements: ["casparser", "pydantic", "python-dateutil", "matplotlib", "sqlite3", "click",
                    "colorama", "rich", "cryptography", "charset-normalizer", "protobuf", "itsdangerous",
                    "python-multipart"],
     // Light theme with a white background by default, even when the device is set to dark mode

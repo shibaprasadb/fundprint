@@ -1,5 +1,6 @@
 """Time in Market: returns by how long each purchase has been held, vs the Nifty 50."""
 import io
+import time
 
 import pandas as pd
 import streamlit as st
@@ -70,7 +71,7 @@ def main():
 
     def png(fig):
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=180, facecolor=fig.get_facecolor())
+        fig.savefig(buf, format="png", dpi=120, facecolor=fig.get_facecolor())
         return buf.getvalue()
 
 
@@ -82,62 +83,60 @@ def main():
         keep = schemes[schemes.asset_class == "Equity"]
         cf = cf.merge(keep[["folio", "scheme"]], on=["folio", "scheme"])
         with st.expander("Funds included"):
-            st.text("\n".join(f"• {n}" for n in sorted(keep.scheme)))   # plain text, see above
+            st.text("\n".join(f"• {n}" for n in sorted(keep.scheme.unique())))   # plain text, see above
     label = "Equity funds" if scope != "All funds" else "All funds"
 
-    if cf.empty:
-        st.warning("No held units found for this selection.")
-    else:
-        table, n_excluded = compare(cf, bench)
-        if n_excluded:
-            st.caption(f"{n_excluded} purchase(s) are older than the benchmark's history and were left out of both sides.")
-        if schemes.scheme.str.contains("IDCW|Dividend", case=False).any() and \
-                schemes.scheme.str.contains("Payout", case=False).any():
-            st.caption("Some funds look like IDCW payout plans. Cash paid out isn't counted, so their returns read low.")
+    def show_chart(fig, filename):
+        st.pyplot(fig)
+        st.download_button("Download this chart (PNG)", png(fig), filename, "image/png")
+        time.sleep(0.1)  # so this chart can paint before the next one is drawn
 
-        active_xirr = 100 * xirr(cf.date, cf.amount)
-        if pd.isna(active_xirr):
-            st.markdown(f"Your active XIRR for {label.lower()} could not be calculated.")
+    with st.spinner("Drawing your charts. On a phone this can take a minute the first time."):
+        time.sleep(0.1)  # so the spinner can paint before the maths blocks
+        if cf.empty:
+            st.warning("No held units found for this selection.")
         else:
-            st.markdown(f"Your active XIRR for {label.lower()} is **{active_xirr:.1f}%**.")
+            table, n_excluded = compare(cf, bench)
+            if n_excluded:
+                st.caption(f"{n_excluded} purchase(s) are older than the benchmark's history and were left out of both sides.")
+            if schemes.scheme.str.contains("IDCW|Dividend", case=False).any() and \
+                    schemes.scheme.str.contains("Payout", case=False).any():
+                st.caption("Some funds look like IDCW payout plans. Cash paid out isn't counted, so their returns read low.")
 
-        alloc = allocation_chart(table)
-        st.pyplot(alloc)
-        st.download_button("Download this chart (PNG)", png(alloc), "fundprint_allocation.png", "image/png")
+            active_xirr = 100 * xirr(cf.date, cf.amount)
+            if pd.isna(active_xirr):
+                st.markdown(f"Your active XIRR for {label.lower()} could not be calculated.")
+            else:
+                st.markdown(f"Your active XIRR for {label.lower()} is **{active_xirr:.1f}%**.")
 
-        facet = facet_chart(table, label, as_of)
-        st.pyplot(facet)
-        st.download_button("Download this chart (PNG)", png(facet), "fundprint_vs_nifty.png", "image/png")
+            show_chart(allocation_chart(table), "fundprint_allocation.png")
+            show_chart(facet_chart(table, label, as_of), "fundprint_vs_nifty.png")
 
-        shown = table.rename(columns={
-            "share_%": "Share of money", "my_xirr_%": "My XIRR", "nifty_xirr_%": "Nifty XIRR",
-            "xirr_gap_%": "XIRR gap", "my_abs_%": "My abs. return", "nifty_abs_%": "Nifty abs. return",
-        }).map(ui.pct)
-        st.dataframe(shown, use_container_width=True)
+            shown = table.rename(columns={
+                "share_%": "Share of money", "my_xirr_%": "My XIRR", "nifty_xirr_%": "Nifty XIRR",
+                "xirr_gap_%": "XIRR gap", "my_abs_%": "My abs. return", "nifty_abs_%": "Nifty abs. return",
+            }).map(ui.pct)
+            st.dataframe(shown, use_container_width=True)
 
-    st.header("The big picture")
-    st.caption("These charts always use your whole portfolio; the toggle above doesn't change them.")
+        st.header("The big picture")
+        st.caption("These charts always use your whole portfolio; the toggle above doesn't change them.")
 
-    gaps = fund_gaps(all_cf, bench, today)
-    if gaps.table.empty:
-        st.caption("No equity funds to compare.")
-    else:
-        fig = gaps_chart(gaps.table)
-        st.pyplot(fig)
-        st.download_button("Download this chart (PNG)", png(fig), "fundprint_index_twin.png", "image/png")
-        if gaps.n_hidden:
-            st.caption("Showing your 12 largest equity funds.")
-    if (all_cf.asset_class != "Equity").any():
-        st.caption("Debt, gold and other non-equity funds aren't shown here.")
+        gaps = fund_gaps(all_cf, bench, today)
+        if gaps.table.empty:
+            st.caption("No equity funds to compare.")
+        else:
+            show_chart(gaps_chart(gaps.table), "fundprint_index_twin.png")
+            if gaps.n_hidden:
+                st.caption("Showing your 12 largest equity funds.")
+        if (all_cf.asset_class != "Equity").any():
+            st.caption("Debt, gold and other non-equity funds aren't shown here.")
 
-    regular = periodicity(parsed.txns, bench)
-    if regular is None:
-        st.caption("No purchases fall inside the benchmark's history.")
-    else:
-        fig = periodicity_chart(regular, as_of)
-        st.pyplot(fig)
-        st.download_button("Download this chart (PNG)", png(fig), "fundprint_regular_investing.png", "image/png")
-        st.caption(PERIODICITY_CAPTION)
+        regular = periodicity(parsed.txns, bench)
+        if regular is None:
+            st.caption("No purchases fall inside the benchmark's history.")
+        else:
+            show_chart(periodicity_chart(regular, as_of), "fundprint_regular_investing.png")
+            st.caption(PERIODICITY_CAPTION)
 
     with st.expander("How this is calculated"):
         st.markdown("""
