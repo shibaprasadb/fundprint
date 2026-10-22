@@ -27,8 +27,7 @@ def test_time_in_market_has_no_rupee_text():
         at = _run(scope)
         assert not at.exception
         text = " ".join(str(e.value) for e in [*at.markdown, *at.caption])
-        text += " ".join(df.value.to_string() for df in at.dataframe)
-        assert len(at.dataframe) == 1 and not BANNED.search(text)
+        assert sum("| Held for |" in m.value for m in at.markdown) == 1 and not BANNED.search(text)
 
 
 def test_sample_banner_shows_on_the_analysis_page():

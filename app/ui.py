@@ -233,6 +233,19 @@ def pct(v):
     return "n/a" if pd.isna(v) else f"{v:.1f}%"
 
 
+def markdown_table(df, index_label):
+    """A small table as Markdown, numbers aligned right.
+
+    Used instead of st.dataframe: that grid needs a 5.5 MB file the browser only downloads the first
+    time a table is shown, so it broke when the network had dropped by then (spec 008). Only fixed
+    labels and formatted numbers go in here, never text from the statement.
+    """
+    head = [index_label, *df.columns]
+    lines = ["| " + " | ".join(head) + " |", "|---|" + "---:|" * len(df.columns)]
+    lines += ["| " + " | ".join([str(i), *map(str, row)]) + " |" for i, row in zip(df.index, df.values.tolist())]
+    return "\n".join(lines)
+
+
 def report_failure(exc):
     """Show a safe error: the kind of error and where in our code it happened.
 

@@ -12,7 +12,7 @@ Indian DIY mutual fund investors get one portfolio XIRR from their fund app. Tha
 ## Your data stays with you
 **Nothing is stored. Your file is read and dropped when you close the tab.**
 
-Fundprint runs entirely in your browser. Your statement is never uploaded to any server. See [PRIVACY.md](PRIVACY.md) for the rules and how to check them yourself: open DevTools → Network, upload a statement, and watch that your file is never sent anywhere.
+Fundprint runs entirely in your browser. Your statement is never uploaded to any server. See [PRIVACY.md](PRIVACY.md) for the rules and how to check them yourself: open DevTools → Network, upload a statement, and watch that your file is never sent anywhere. Or load the page, turn on airplane mode, and upload your statement: it still works.
 
 ## Analytics
 The live page counts visits with [Umami](https://umami.is), to see how many people use it. No cookies, only anonymised visit data, and nothing from your statement. To check, open the Network tab: the only requests to another site are the small page-view requests to `gateway.umami.is`. More in [PRIVACY.md](PRIVACY.md#analytics).

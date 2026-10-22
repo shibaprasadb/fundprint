@@ -158,10 +158,9 @@ def test_page_warns_and_still_shows_results_without_rupees():
     at = _page_with(p)
     assert not at.exception
     assert len(at.warning) == 1 and "Sample Flexi Cap Fund" in at.warning[0].value
-    assert len(at.dataframe) == 1                          # results still render
+    assert any("| Held for |" in m.value for m in at.markdown)   # results table still renders
     assert [h.value for h in at.header] == ["By time in market", "The big picture"]
     text = " ".join(str(e.value) for e in [*at.warning, *at.markdown, *at.caption])
-    text += " ".join(df.value.to_string() for df in at.dataframe)
     assert not BANNED.search(text)
     assert not re.search(r"\d", at.warning[0].value)      # no unit counts or amounts in the warning
 

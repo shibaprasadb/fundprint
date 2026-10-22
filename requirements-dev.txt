@@ -3,3 +3,4 @@ pytest
 pyxirr
 nbstripout
 requests
+playwright==1.64.0   # browser test for spec 008 (tests/test_offline.py)

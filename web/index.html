@@ -25,6 +25,8 @@
        (umami.js, loaded by feedback.js), so no script is loaded from another site. gateway.umami.is receives the counts. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data: https://gateway.umami.is; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <link rel="stylesheet" href="./vendor/stlite/stlite.css">
+  <!-- So the app still works if the network drops after the page has loaded (spec 008) -->
+  <!-- preload tags are added here by scripts/build_web.py -->
   <style>
     #loading-note { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 1000000;
                     display: flex; align-items: center; gap: 0.75rem; max-width: calc(100vw - 2rem);
