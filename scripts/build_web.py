@@ -65,6 +65,31 @@ def add_preload_tags(html, names):
     tags = "\n".join(f'  <link rel="modulepreload" href="./vendor/stlite/{n}">' for n in names)
     return html.replace("  " + PRELOAD_MARKER, tags) if names else html
 
+# Streamlit puts each page's name in the address bar (/fundprint/Time_in_Market). Reloading that address
+# asked GitHub Pages for a file that doesn't exist, so it showed its own 404 page. Each page gets a tiny
+# file with that name that sends the browser to the home page (spec 009). After a reload nothing from
+# the statement is left anyway, so home is the right place. The file has no script and loads nothing.
+REDIRECT_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'">
+  <meta http-equiv="refresh" content="0; url=./">
+  <meta name="robots" content="noindex">
+  <title>Fundprint</title>
+</head>
+<body>
+  <p><a href="./">Go to Fundprint</a></p>
+</body>
+</html>
+"""
+
+
+def page_address(page_file):
+    """The name Streamlit shows in the address bar: the file name without its number and .py."""
+    return re.sub(r"^\d+_", "", Path(page_file).stem)
+
 
 def main():
     if DIST.exists():
@@ -74,6 +99,8 @@ def main():
         out = DIST / "app" / rel
         out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, out)
+    for page in sorted((ROOT / "app/pages").glob("*.py")):
+        (DIST / f"{page_address(page)}.html").write_text(REDIRECT_PAGE)
     (DIST / "app-manifest.json").write_text(json.dumps({"files": [rel for _, rel in APP_FILES]}))
     for name in ("index.html", "og-image.png", "boot.js", "pyodide-start.mjs", "umami.js", "feedback.js"):
         shutil.copy(ROOT / "web" / name, DIST / name)

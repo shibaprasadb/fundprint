@@ -46,3 +46,24 @@ def test_the_built_page_preloads_every_listed_widget():
     html = built.read_text()
     for w in bw.PRELOAD_WIDGETS:
         assert f'href="./vendor/stlite/{w}-' in html, w
+
+
+# Spec 009: reloading a page's address lands on Home instead of GitHub's 404 page.
+
+def test_page_address_matches_streamlit():
+    assert bw.page_address("app/pages/1_Time_in_Market.py") == "Time_in_Market"
+    assert bw.page_address("12_Two_Words.py") == "Two_Words"
+
+
+def test_redirect_page_only_points_home():
+    html = bw.REDIRECT_PAGE
+    assert "<script" not in html.lower() and "://" not in html             # runs nothing, links nowhere else
+    assert "default-src 'none'" in html                                   # loads nothing
+    assert 'content="0; url=./"' in html and 'href="./"' in html
+
+
+def test_every_page_has_a_redirect_file():
+    if not (ROOT / "dist/index.html").exists():
+        pytest.skip("needs a build in dist/")
+    for page in (ROOT / "app/pages").glob("*.py"):
+        assert (ROOT / "dist" / f"{bw.page_address(page)}.html").read_text() == bw.REDIRECT_PAGE
