@@ -36,6 +36,10 @@
                              border: 2px solid #D5D6DB; border-top-color: #31333F;
                              animation: loading-spin 0.8s linear infinite; }
     @keyframes loading-spin { to { transform: rotate(360deg); } }
+    /* Shown by boot.js when start-up is slow or fails (spec 010) */
+    #loading-note button { flex: none; padding: 0.35rem 0.9rem; border: 0; border-radius: 0.4rem;
+                           background: #002147; color: #FFFFFF; font: 600 0.9rem system-ui, sans-serif; cursor: pointer; }
+    #loading-note button:hover, #loading-note button:focus-visible { background: #0A3A70; }
     /* Sits to the left of Streamlit's own top-right menu so it never covers it */
     #feedback-link { position: fixed; top: 0.7rem; right: 4.5rem; z-index: 999990;
                      padding: 0.3rem 0.85rem; border-radius: 999px; background: #002147; color: #FFFFFF;
