@@ -25,6 +25,8 @@
        (umami.js, loaded by feedback.js), so no script is loaded from another site. gateway.umami.is receives the counts. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: data:; worker-src 'self' blob: data:; connect-src 'self' blob: data: https://gateway.umami.is; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <link rel="stylesheet" href="./vendor/stlite/stlite.css">
+  <!-- So the app still works if the network drops after the page has loaded (spec 008) -->
+  <!-- preload tags are added here by scripts/build_web.py -->
   <style>
     #loading-note { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); z-index: 1000000;
                     display: flex; align-items: center; gap: 0.75rem; max-width: calc(100vw - 2rem);
@@ -34,6 +36,10 @@
                              border: 2px solid #D5D6DB; border-top-color: #31333F;
                              animation: loading-spin 0.8s linear infinite; }
     @keyframes loading-spin { to { transform: rotate(360deg); } }
+    /* Shown by boot.js when start-up is slow or fails (spec 010) */
+    #loading-note button { flex: none; padding: 0.35rem 0.9rem; border: 0; border-radius: 0.4rem;
+                           background: #002147; color: #FFFFFF; font: 600 0.9rem system-ui, sans-serif; cursor: pointer; }
+    #loading-note button:hover, #loading-note button:focus-visible { background: #0A3A70; }
     /* Sits to the left of Streamlit's own top-right menu so it never covers it */
     #feedback-link { position: fixed; top: 0.7rem; right: 4.5rem; z-index: 999990;
                      padding: 0.3rem 0.85rem; border-radius: 999px; background: #002147; color: #FFFFFF;

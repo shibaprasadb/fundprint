@@ -37,6 +37,10 @@ jobs:
       - run: pytest -q
       - run: python scripts/fetch_vendor.py
       - run: python scripts/build_web.py
+      - name: Check the app keeps working offline once loaded (spec 008)
+        run: |
+          python -m playwright install --with-deps chromium webkit
+          FUNDPRINT_OFFLINE_TEST=required pytest -q tests/test_offline.py tests/test_build_web.py
       - name: Check the build has no outside links
         run: |
           ! grep -rEl "https?://(cdn|cloud\.umami|unpkg|fonts|www\.google|files\.pythonhosted|pypi)" dist/index.html dist/boot.js dist/app-manifest.json

@@ -116,7 +116,7 @@ def main():
                 "share_%": "Share of money", "my_xirr_%": "My XIRR", "nifty_xirr_%": "Nifty XIRR",
                 "xirr_gap_%": "XIRR gap", "my_abs_%": "My abs. return", "nifty_abs_%": "Nifty abs. return",
             }).map(ui.pct)
-            st.dataframe(shown, use_container_width=True)
+            st.markdown(ui.markdown_table(shown, "Held for"))
 
         st.header("The big picture")
         st.caption("These charts always use your whole portfolio; the toggle above doesn't change them.")

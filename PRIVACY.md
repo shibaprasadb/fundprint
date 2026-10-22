@@ -20,8 +20,9 @@ Fundprint runs entirely in your browser. Your statement is never uploaded to any
 
 ## Check it yourself
 1. Open DevTools → Network, upload a statement, and watch: after the app has loaded, the only requests that leave this site are small ones to `gateway.umami.is`. Click one to see what it holds: the page address, never your file.
-2. Read the Content-Security-Policy tag in the page source.
-3. Read the code. There is no server code to hide anything in.
+2. Turn the network off. Load the page and wait until the loading note is gone, then turn on airplane mode (or switch off Wi-Fi) and upload your statement. Everything still works, because the app downloads all it needs before it is ready. A page that works with no network cannot send your file anywhere. (Reloading the page while offline does not work: the browser needs the network to load the page itself.)
+3. Read the Content-Security-Policy tag in the page source.
+4. Read the code. There is no server code to hide anything in.
 
 ## What the browser build enforces
 `web/index.html` carries a Content-Security-Policy tag with `connect-src 'self' blob: data: https://gateway.umami.is`. The browser blocks any request to any other site, including from the Python worker. During testing the policy caught a CDN request we had missed, which is why Python, its packages and the wheels are now served from this site.

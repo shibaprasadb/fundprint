@@ -12,3 +12,6 @@ Each file starts with a Status line. Superseded parts are kept as history.
 | 005 | [Two new insights (funds vs index twin; periodicity)](005-insights.md) | Implemented |
 | 006 | [Partial history: warn, don't block](006-partial-history.md) | Implemented |
 | 007 | [Mobile: don't freeze on the first tap](007-mobile.md) | Implemented |
+| 008 | [Works offline once loaded](008-offline.md) | Implemented |
+| 009 | [Reloading a page lands on Home](009-reload-redirect.md) | Implemented |
+| 010 | [Start-up never hangs silently](010-startup-stall.md) | Implemented |
