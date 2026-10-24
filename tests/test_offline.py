@@ -100,7 +100,7 @@ def test_whole_flow_works_offline_after_load(site, engine):
         page.get_by_text("Funds included").wait_for(timeout=30_000)
         results_drawn(page)
         with page.expect_download():
-            page.get_by_role("button", name="Download this chart (PNG)").first.click()
+            page.get_by_role("button", name="Download PNG").first.click()
         wait_until_drawn(page)
 
         errors = page.locator('[data-testid="stAlertContentError"], [data-testid="stException"]').all_inner_texts()

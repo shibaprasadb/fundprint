@@ -178,7 +178,7 @@ def wait_ready(page, timeout=240_000):
     """T0: the loading note is gone AND the whole home page is drawn (the uploader is there, Streamlit
     is idle). The note alone is not enough: on the live site it goes before the uploader is drawn."""
     page.wait_for_selector("#loading-note", state="detached", timeout=timeout)
-    page.get_by_role("button", name="See it with sample data").wait_for(timeout=timeout)
+    page.get_by_role("button", name="Try it with a sample portfolio").wait_for(timeout=timeout)
     page.locator('[data-testid="stFileUploaderDropzone"]').wait_for(timeout=timeout)
     settle(page, quiet=3)
 
@@ -238,7 +238,7 @@ def results_tour(rec, page, report, tag):
 
     def download():
         with page.expect_download(timeout=10_000):
-            page.get_by_role("button", name="Download this chart (PNG)").first.click(timeout=10_000)
+            page.get_by_role("button", name="Download PNG").first.click(timeout=10_000)
     check(rec, page, report, f"{tag}: download a chart", download)
 
 
@@ -265,8 +265,8 @@ def full_flow(rec, page, report):
     rec.step = "idle after ready"
     page.wait_for_timeout(5000)
     report.append({"step": "idle after ready", "ok": True, "at": rec.now(), "broken_widgets": broken_widgets(page)})
-    if check(rec, page, report, "click 'See it with sample data'",
-             lambda: page.get_by_role("button", name="See it with sample data").click(timeout=10_000)):
+    if check(rec, page, report, "click 'Try it with a sample portfolio'",
+             lambda: page.get_by_role("button", name="Try it with a sample portfolio").click(timeout=10_000)):
         results_tour(rec, page, report, "sample")
     check(rec, page, report, "back to Home", lambda: go_home(page))
     upload_flow(rec, page, report)
