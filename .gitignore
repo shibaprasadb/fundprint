@@ -7,6 +7,7 @@ __pycache__/
 !docs/*.png
 !app/assets/*.png
 !web/og-image.png
+!web/favicon.png
 .DS_Store
 dist/
 web/vendor/
