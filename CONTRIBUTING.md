@@ -20,10 +20,22 @@ Thanks for helping. Fundprint is a small, privacy-first project, so a few rules 
 ## Run it locally
 ```bash
 pip install -r requirements-dev.txt
+nbstripout --install           # once after cloning: clears notebook outputs when you commit
 streamlit run app/Home.py      # the app
 pytest                         # the tests
 ```
 Use the built-in **sample data** to try things out. Don't use your own statement while developing.
+
+## Try the browser build
+The live site is a browser build, which differs a little from `streamlit run` (for example, it has the header bar). To try it:
+```bash
+python scripts/refresh_data.py     # downloads the public benchmark and category data
+python scripts/fetch_vendor.py && python scripts/build_web.py
+cd dist && python -m http.server 8766   # then open http://localhost:8766
+```
+- `scripts/fetch_vendor.py` downloads stlite 1.11.0, a trimmed Pyodide 0.29.3 and a few pure-Python wheels into `web/vendor/`. Each file is checked against a SHA-256 hash written in the script; on a mismatch the script deletes the file and stops. To move to a new version, change the version and hash there, and compare the hash with what the publisher lists.
+- The browser build uses casparser 0.8.1 (reads PDFs with pdfminer). Newer versions need a PDF library that has no browser build yet.
+- The deploy has two jobs: `build` (installs, tests, downloads, builds; no secrets) and `deploy` (holds the deploy key; runs no Python and no script from this repo). GitHub Actions are pinned to full commit IDs. GitHub Pages stays OFF in this repo.
 
 ## What a pull request needs
 - **All tests pass**, including the privacy checks (no caching of user data, no browser storage, no rupee amounts on screen).
@@ -46,6 +58,14 @@ Use the built-in **sample data** to try things out. Don't use your own statement
 - Secrets or API keys.
 
 Pull requests that break the privacy rules won't be merged, however useful the feature.
+
+## Maintainer notes
+
+### Updating the Umami script
+`web/umami.js` is an unedited copy of `https://cloud.umami.is/script.js`, copied on 14 Oct 2026. Umami is MIT licensed. To update it: download the new file, read it in full (what it sends and where), replace the copy, and update the hash in `tests/test_privacy.py`.
+
+### The CAMS form screenshot
+The Home page checklist shows `app/assets/cams_form_annotated.png`. To make a new one, take a plain screenshot of the CAMS form with **Detailed** selected and run `python scripts/annotate_cams_form.py path/to/screenshot.png`. The script wipes the email, PAN and password boxes and draws the numbered markers. Keep the original screenshot out of the repo. If the image file is missing, the page simply shows the table without it.
 
 ## Licence
 By contributing, you agree that your contributions are released under the project's [MIT License](LICENSE).
