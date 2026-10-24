@@ -1,5 +1,6 @@
-"""Bits shared by every page: the promise banner, footer, public data loading."""
+"""Bits shared by every page: page style, the privacy panel, footer, public data loading."""
 import base64
+import html
 import json
 import logging
 import sys
@@ -20,14 +21,17 @@ REPO_URL = "https://github.com/shibaprasadb/fundprint"  # update if the repo liv
 APP_URL = "https://lab.shibaprasadb.com/fundprint"
 CAMS_URL = "https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement"
 FORM_IMAGE = HERE / "assets" / "cams_form_annotated.png"
+FAVICON = HERE / "assets" / "favicon.png"
 FORM_IMAGE_ALT = ("CAMS statement form with Detailed selected, the from-date set early, "
                   "and a password field.")
 PROMISE = "Nothing is stored. Your file is read and dropped when you close the tab."
-PROMISE_WHERE = "Fundprint runs entirely in your browser. Your statement is never uploaded to any server."
+PROMISE_WHERE = "Fundprint runs entirely in your browser."
 PROMISE_DETAIL = (
-    f"Don't take our word for it: the [code is open source]({REPO_URL}), and you can open your "
-    "browser's Network tab to check that your file is never sent anywhere."
+    f"Don't take my word for it: the <a href=\"{REPO_URL}\">code is open source</a>, and your browser's "
+    "Network tab will show nothing being sent."
 )
+PRIVACY_URL = f"{REPO_URL}/blob/main/PRIVACY.md"
+HOW_IT_WORKS_URL = f"{REPO_URL}/blob/main/ARCHITECTURE.md"
 DISCLAIMER = (
     "Fundprint is an analytics tool, not investment advice. Past returns don't predict future "
     "returns. Fundprint is not affiliated with CAMS, KFintech, AMFI, or any fund house. "
@@ -45,19 +49,71 @@ def load_public_data():
     return bench, cats, manifest
 
 
-# The pages use the wide layout; the first rule stops them stretching edge to edge on very large screens.
-# The primary button (see it with sample data) is made big. On phones every button fills the width.
+# One small block of style, injected on every page. Colours match web/index.html (the header and the
+# loading screen live there): paper #FAF8F3, ink #1B2333, navy #002147 (links, controls, headings),
+# brick #C0392B (only the Gap column), grey #5F5F5F, hairline rule #D9D4C7.
 CSS = """<style>
-.block-container{max-width:1200px}
-button[kind="primary"]{padding:0.9rem 2rem;min-height:3.5rem}
-button[kind="primary"] p{font-size:1.2rem}
-h3[id^="step-"]{font-size:1.25rem}
-.stLinkButton a{background:#D9F2DE;border-color:#7CC98B;color:#14532D}
-.stLinkButton a:hover{background:#C6EBCD;border-color:#4FB365;color:#14532D}
+html, body, .stApp{background:#FAF8F3}
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"],
+[data-testid="stToolbar"], [data-testid="stHeader"], [data-testid="stDecoration"], #MainMenu, footer{display:none !important}
+.block-container{padding-top:4.5rem}
+h1, h2, h3{color:#002147;font-weight:600;scroll-margin-top:4rem}
+h1{font-size:2.25rem} h2{font-size:1.5rem;border-bottom:1px solid #D9D4C7;padding-bottom:.35rem} h3{font-size:1.15rem}
+table, [data-testid="stDataFrame"]{font-variant-numeric:tabular-nums}
+[data-testid="stMarkdownContainer"] strong{font-variant-numeric:tabular-nums}
+[data-testid="stCaptionContainer"]{font-size:.85rem;color:#5F5F5F;opacity:1}
+a{color:#002147}
+
+.kicker{font-variant-caps:small-caps;letter-spacing:.06em;color:#5F5F5F;margin:0 0 .25rem 0}
+.standfirst{font-size:1.15rem;color:#1B2333;margin:0 0 1rem 0}
+.panel{background:#F1EEE6;border-left:3px solid #002147;padding:.9rem 1.1rem;margin:1rem 0;color:#1B2333}
+.panel p{margin:0 0 .4rem 0}
+.panel p:last-child{margin-bottom:0}
+.panel a{color:#002147}
+
+/* Buttons: navy outline on paper. The only filled navy control is the file uploader's button. */
+.stButton button, [data-testid="stFormSubmitButton"] button{background:#FAF8F3;color:#002147;border:1px solid #002147;font-weight:400;min-height:2.75rem}
+.stButton button:hover, [data-testid="stFormSubmitButton"] button:hover{background:#F1EEE6;border-color:#002147;color:#002147}
+[data-testid="stFileUploaderDropzone"] button{background:#002147;color:#FFFFFF;border:1px solid #002147;font-weight:400}
+[data-testid="stFileUploaderDropzone"] button:hover{background:#0A3A70;color:#FFFFFF;border-color:#0A3A70}
+.stLinkButton a, [data-testid="stLinkButton"] a{background:none;border:0;padding:0;min-height:0;color:#002147;font-weight:400;justify-content:flex-start}
+.stLinkButton a:hover, [data-testid="stLinkButton"] a:hover{background:none;text-decoration:underline;color:#002147}
+[data-testid="stPageLink"] a{color:#002147}
+[data-testid="stPageLink"] a:hover{background:none;text-decoration:underline}
+[data-testid="stCode"] pre, [data-testid="stCode"] code{background:transparent;color:#1B2333;font-size:.95rem}
+[data-testid="stCode"] pre{padding:.2rem 0}
+
+/* Download links sit under the chart, small and grey, on the right */
+[data-testid="stElementContainer"]:has([data-testid="stDownloadButton"]){display:flex;justify-content:flex-end;width:100% !important}
+[data-testid="stDownloadButton"] button{background:none;border:0;padding:0;min-height:0;color:#5F5F5F;font-size:.85rem;font-weight:400}
+[data-testid="stDownloadButton"] button:hover{background:none;color:#002147;text-decoration:underline}
+
+/* Plain disclosure: no box, serif label */
+[data-testid="stExpander"] details{border:0;background:transparent;border-radius:0}
+[data-testid="stExpander"] summary{padding-left:0;font-family:"Source Serif","Source Serif 4",Georgia,serif;font-size:1.15rem;font-weight:600;color:#002147}
+
+/* Tables: header row on paper-2, hairline row rules, no vertical lines */
+[data-testid="stMarkdownContainer"] table{border-collapse:collapse;width:100%;font-size:.9rem}
+[data-testid="stMarkdownContainer"] th, [data-testid="stMarkdownContainer"] td{border:0;border-bottom:1px solid #D9D4C7;padding:.5rem .6rem;color:#1B2333}
+[data-testid="stMarkdownContainer"] th{background:#F1EEE6;font-weight:600}
+.fp-wrap{overflow-x:auto}
+.fp-table th, .fp-table td{text-align:right}
+.fp-table td{white-space:nowrap}
+.fp-table th, .fp-table td{padding:.5rem .4rem}
+.fp-table th:first-child, .fp-table td:first-child{text-align:left}
+[data-testid="stMarkdownContainer"] .fp-table td.gap-ahead{color:#C0392B;font-weight:600}
+[data-testid="stMarkdownContainer"] .fp-table td.gap-behind{color:#5F5F5F}
+
+.footer{border-top:1px solid #D9D4C7;margin-top:3rem;padding-top:1rem;font-size:.85rem;color:#5F5F5F}
+.footer p{margin:0 0 .4rem 0}
+.footer a{color:#5F5F5F;text-decoration:underline}
+
 @media (max-width: 640px){
-  [data-testid="stElementContainer"]:has(.stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]){width:100% !important}
-  .stButton, .stLinkButton, [data-testid="stFormSubmitButton"], [data-testid="stPageLink"]{width:100% !important}
-  .stButton button, .stLinkButton a, [data-testid="stFormSubmitButton"] button, [data-testid="stPageLink"] a{width:100% !important;justify-content:center}
+  .stButton, [data-testid="stFormSubmitButton"]{width:100% !important}
+  [data-testid="stElementContainer"]:has(.stButton, [data-testid="stFormSubmitButton"]){width:100% !important}
+  .stButton button, [data-testid="stFormSubmitButton"] button{width:100% !important;justify-content:center}
+  .stLinkButton a, [data-testid="stLinkButton"] a, [data-testid="stPageLink"] a, [data-testid="stDownloadButton"] button{min-height:44px;display:inline-flex;align-items:center}
+  [data-testid="stMarkdownContainer"] table:not(.fp-table){display:block;overflow-x:auto}
 }
 </style>"""
 
@@ -95,49 +151,28 @@ def prepare_charts():
     plt.close(fig)
 
 
-def sidebar_note():
+def setup():
+    """Call first on every page: quiet logs and the page style. The header bar is in web/index.html."""
     quiet_logs()
     st.markdown(CSS, unsafe_allow_html=True)
-    st.sidebar.markdown("🔒 Runs in your browser. Nothing is stored.")
 
 
-OXFORD_BLUE = "#002147"
 FEEDBACK_URL = "https://tally.so/r/2EqQGg"
 
 
-def _bar(html):
-    st.markdown(
-        f'<div style="background:{OXFORD_BLUE};color:#FFFFFF;padding:1.2rem 1.5rem;'
-        f'border-radius:0.5rem;margin-bottom:1rem">{html}</div>',
-        unsafe_allow_html=True,
-    )
-
-
-def header_bar():
-    """The name and tagline in an Oxford Blue bar."""
-    _bar('<div style="font-size:2.2rem;font-weight:700;line-height:1.2">Fundprint (Beta)</div>'
-         '<div style="font-style:italic;margin-top:0.3rem">A CASual look at your mutual fund statement.</div>')
-
-
-def section_bar(title):
-    """A section heading in the same Oxford Blue bar."""
-    _bar(f'<div style="font-size:1.6rem;font-weight:700;line-height:1.2">{title}</div>')
+def panel(html):
+    """A calm note: paper-2 background with a thin navy rule on the left. `html` is fixed text, never statement data."""
+    st.markdown(f'<div class="panel">{html}</div>', unsafe_allow_html=True)
 
 
 def promise_box():
-    """The privacy promise in a light red box, so it is the first thing people notice."""
-    st.markdown(
-        '<div style="background:#FDECEA;border:1px solid #F5C2BD;border-radius:0.5rem;'
-        'padding:0.9rem 1.1rem;margin-bottom:1rem;color:#1A1A1A">'
-        f'<p style="margin:0 0 0.4rem 0"><strong>{PROMISE}</strong></p>'
-        f'<p style="margin:0">{PROMISE_WHERE}</p></div>',
-        unsafe_allow_html=True,
-    )
+    """The privacy promise and how to check it, in a neutral panel."""
+    panel(f"<p><strong>{PROMISE}</strong></p><p>{PROMISE_WHERE}</p><p>{PROMISE_DETAIL}</p>")
 
 
 def sample_banner():
     """Shown on the analysis pages while the made-up portfolio is in use."""
-    st.info("**You're looking at a sample portfolio (made-up data).**")
+    panel("<p><strong>You're looking at a made-up sample portfolio.</strong></p>")
     st.page_link("Home.py", label="Use your own statement →")
 
 
@@ -160,7 +195,7 @@ def _form_image():
     left, _ = st.columns([5, 1])   # a readable width on a computer; the columns stack to full width on a phone
     left.markdown(
         f'<img src="data:image/png;base64,{data}" alt="{FORM_IMAGE_ALT}" '
-        'style="width:100%;height:auto;border:1px solid #E6E6E6;border-radius:0.5rem">',
+        'style="width:100%;height:auto;border:1px solid #D9D4C7;border-radius:4px">',
         unsafe_allow_html=True,
     )
 
@@ -170,7 +205,7 @@ STEP_2_TABLE = """
 | Field | Choose | Note |
 |---|---|---|
 | ① Statement type | **Detailed** (includes transaction listing) | **Required.** A Summary statement won't work. |
-| ② Period / from date | **A date before your first-ever investment** | Earlier is fine. Missing history makes results wrong. |
+| ② Period / from date | **A date before your first-ever investment** | **Required.** Earlier is fine. Missing history makes results wrong. |
 | To date | Today | |
 | Folio listing | Any option | All work. |
 | Email + PAN | Yours | The PDF is emailed to you. |
@@ -217,33 +252,54 @@ def history_warning(text):
 
 
 def footer(manifest):
-    link = 'style="color:#FFFFFF;text-decoration:underline"'
-    _bar(
-        f'<div style="font-size:0.85rem">{DISCLAIMER}</div>'
-        f'<div style="font-size:0.85rem;margin-top:0.5rem">'
-        f'Benchmark data as of {manifest["benchmark"]["latest_date"]} · '
-        f'<a href="{REPO_URL}" {link}>Source code</a> · '
-        f'<a href="{FEEDBACK_URL}" target="_blank" rel="noopener noreferrer" {link}>Feedback</a> · '
-        f'Built by <a href="https://shibaprasadb.com" {link}>shibaprasadb.com</a></div>'
+    st.markdown(
+        '<div class="footer">'
+        "<p>Runs entirely in your browser. Nothing is stored or uploaded.</p>"
+        f"<p>{DISCLAIMER}</p>"
+        f'<p>Benchmark data as of {manifest["benchmark"]["latest_date"]} · '
+        f'<a href="{REPO_URL}">Source code</a> · '
+        f'<a href="{PRIVACY_URL}">Privacy</a> · '
+        f'<a href="{FEEDBACK_URL}" target="_blank" rel="noopener noreferrer">Feedback</a> · '
+        'Built by <a href="https://shibaprasadb.com">shibaprasadb.com</a></p></div>',
+        unsafe_allow_html=True,
     )
 
 
 def pct(v):
     """Format a percentage, or 'n/a' when it couldn't be calculated."""
-    return "n/a" if pd.isna(v) else f"{v:.1f}%"
+    return "n/a" if pd.isna(v) else f"{v:.1f}%".replace("-", "\u2212")   # a true minus sign
 
 
-def markdown_table(df, index_label):
-    """A small table as Markdown, numbers aligned right.
+def gap_pts(v):
+    """A gap between two percentages, in percentage points, signed, with a true minus sign."""
+    if pd.isna(v):
+        return "n/a"
+    text = f"{abs(v):.1f}"
+    return f"+{text}" if v > 0 else f"\u2212{text}" if v < 0 else text
+
+
+def results_table(table):
+    """The comparison as a plain HTML table. Only the Gap column is coloured: brick when ahead, grey when behind.
 
     Used instead of st.dataframe: that grid needs a 5.5 MB file the browser only downloads the first
     time a table is shown, so it broke when the network had dropped by then (spec 008). Only fixed
     labels and formatted numbers go in here, never text from the statement.
     """
-    head = [index_label, *df.columns]
-    lines = ["| " + " | ".join(head) + " |", "|---|" + "---:|" * len(df.columns)]
-    lines += ["| " + " | ".join([str(i), *map(str, row)]) + " |" for i, row in zip(df.index, df.values.tolist())]
-    return "\n".join(lines)
+    heads = ["Held for", "Share of money", "Your XIRR", "Nifty 50 XIRR", "Gap (pts)",
+             "Your absolute return", "Nifty 50 absolute return"]
+    rows = []
+    for label, r in table.iterrows():
+        gap = r["xirr_gap_%"]
+        kind = "gap-ahead" if gap > 0 else "gap-behind"
+        cells = [pct(r["share_%"]), pct(r["my_xirr_%"]), pct(r["nifty_xirr_%"])]
+        cells_after = [pct(r["my_abs_%"]), pct(r["nifty_abs_%"])]
+        body = "".join(f"<td>{html.escape(c)}</td>" for c in cells)
+        body += f'<td class="{kind if not pd.isna(gap) else ""}">{gap_pts(gap)}</td>'
+        body += "".join(f"<td>{html.escape(c)}</td>" for c in cells_after)
+        rows.append(f"<tr><td>{html.escape(str(label))}</td>{body}</tr>")
+    head = "".join(f"<th>{h}</th>" for h in heads)
+    return (f'<div class="fp-wrap"><table class="fp-table"><thead><tr>{head}</tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>')
 
 
 def report_failure(exc):

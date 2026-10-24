@@ -13,7 +13,7 @@ BANNED = re.compile(r"₹|\bRs\b|\bINR\b|lakh|crore", re.I)
 
 
 def _run(scope):
-    """Click "See it with sample data" on Home, which lands on the Time in Market page."""
+    """Click "Try it with a sample portfolio" on Home, which lands on the Time in Market page."""
     at = AppTest.from_file(str(ROOT / "app/Home.py"), default_timeout=90)
     at.run()
     at.button[0].click().run()
@@ -28,22 +28,24 @@ def test_time_in_market_has_no_rupee_text():
         at = _run(scope)
         assert not at.exception
         text = " ".join(str(e.value) for e in [*at.markdown, *at.caption])
-        assert sum("| Held for |" in m.value for m in at.markdown) == 1 and not BANNED.search(text)
+        assert sum("<th>Held for</th>" in m.value for m in at.markdown) == 1 and not BANNED.search(text)
 
 
 def test_sample_banner_shows_on_the_analysis_page():
     at = _run(None)
-    assert any("sample portfolio (made-up data)" in i.value for i in at.info)
+    assert any("made-up sample portfolio" in m.value for m in at.markdown)
+    assert at.get("page_link")[0].proto.label == "Use your own statement →"
 
 
 def test_big_picture_section_ignores_the_scope_toggle():
     for scope in (None, "Equity funds only"):
         at = _run(scope)
         assert not at.exception
-        assert [h.value for h in at.header] == ["By time in market", "The big picture"]
+        assert [h.value for h in at.title] == ["Returns by holding period"]
+        assert [h.value for h in at.header] == ["The big picture"]
         captions = [c.value for c in at.caption]
-        assert any("the toggle above doesn't change them" in c for c in captions)
-        assert any("aren't shown here" in c for c in captions)
+        assert sum("the choice above doesn't change this chart" in c for c in captions) == 2
+        assert any("aren't shown" in c for c in captions)
 
 
 

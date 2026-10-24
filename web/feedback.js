@@ -18,7 +18,7 @@
     return payload;
   };
 
-  // One listener covers the floating button and the footer link (the footer is drawn later by the app).
+  // One listener covers the header link and the footer link (the footer is drawn later by the app).
   document.addEventListener("click", function (e) {
     var link = e.target && e.target.closest ? e.target.closest("a") : null;
     if (!link || link.getAttribute("href") !== FORM_URL) return;

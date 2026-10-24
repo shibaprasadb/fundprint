@@ -8,7 +8,8 @@ import ui
 from fundprint.parse import CasError, parse_cas
 from fundprint.sample import sample_cas, sample_categories
 
-st.set_page_config(page_title="Fundprint", page_icon="🔒", layout="wide")
+st.set_page_config(page_title="Fundprint: a CASual look at your mutual fund statement",
+                   page_icon=str(ui.FAVICON), layout="centered", initial_sidebar_state="collapsed")
 
 RESULTS_PAGE = "pages/1_Time_in_Market.py"
 
@@ -33,31 +34,31 @@ def read_statement(file, password, cats):
 
 def main():
     ui.prepare_charts()  # before any widget, so this runs under the loading note
-    ui.sidebar_note()
+    ui.setup()
     bench, cats, manifest = ui.load_public_data()
 
-    ui.header_bar()
+    st.markdown('<p class="kicker">A CASual look at your mutual fund statement</p>', unsafe_allow_html=True)
+    st.title("One XIRR number hides most of the story")
     st.markdown(
-        "Fundprint goes one level deeper than a single XIRR number. It breaks down your mutual fund "
-        "investments in different ways, such as how long you have held each purchase and how "
-        "that compares with a Nifty 50 index fund, so you can see what is really driving your returns."
+        '<p class="standfirst">Fundprint breaks your returns down by how long you\'ve held each purchase '
+        "and compares every one with a Nifty 50 index fund bought on the same day.</p>",
+        unsafe_allow_html=True,
     )
 
     ui.promise_box()
-    st.markdown(ui.PROMISE_DETAIL)
 
     # The payoff first: the sample is one click away
-    if st.button("See it with sample data", type="primary"):
+    if st.button("Try it with a sample portfolio"):
         st.session_state["parsed"] = sample_cas(pd.Timestamp.today())
         st.session_state["categories"] = sample_categories()
         st.session_state["is_sample"] = True
         st.switch_page(RESULTS_PAGE)
     st.caption("A made-up portfolio, so you can see what Fundprint shows before using your own.")
 
-    ui.section_bar("Use your own statement")
+    st.header("Use your own statement")
 
     st.subheader("Already have your statement?")
-    file = st.file_uploader("Your statement (PDF)", type="pdf")
+    file = st.file_uploader("Your CAS statement (PDF from CAMS or KFintech)", type="pdf")
     done = False
     if file is not None:
         # Choose the file, type the password, press Enter (or the button): no other clicks.

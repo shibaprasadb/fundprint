@@ -1,4 +1,9 @@
-# Used when running on a computer (streamlit run app/Home.py). The browser build sets the same in web/boot.js.
+# Used when running on a computer (streamlit run app/Home.py). The browser build sets the same in web/boot.js,
+# plus headingFont, baseRadius, borderColor and showWidgetBorder, which the Streamlit used on a computer doesn't know yet.
 [theme]
 base = "light"
-backgroundColor = "#FFFFFF"
+backgroundColor = "#FAF8F3"
+secondaryBackgroundColor = "#F1EEE6"
+textColor = "#1B2333"
+primaryColor = "#002147"
+font = "sans-serif"

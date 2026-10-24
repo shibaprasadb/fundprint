@@ -13,19 +13,15 @@ const FAILED_TEXT = "Fundprint could not finish loading. Check your connection a
 function showNote(text, { spinner }) {
   const note = document.getElementById("loading-note");
   if (!note) return;
-  note.replaceChildren();
-  if (spinner) {
-    const s = document.createElement("span");
-    s.className = "spinner";
-    note.append(s);
+  note.querySelector("#loading-text").textContent = text;
+  note.querySelector("#loading-line").hidden = !spinner;   // the moving line stops when start-up has failed
+  if (!note.querySelector("button")) {
+    const reload = document.createElement("button");
+    reload.type = "button";
+    reload.textContent = "Reload";
+    reload.addEventListener("click", () => location.reload());   // the security policy blocks click handlers written in the HTML
+    note.append(reload);
   }
-  const words = document.createElement("span");
-  words.textContent = text;
-  const reload = document.createElement("button");
-  reload.type = "button";
-  reload.textContent = "Reload";
-  reload.addEventListener("click", () => location.reload());   // the security policy blocks click handlers written in the HTML
-  note.append(words, reload);
 }
 
 const slowTimer = setTimeout(() => showNote(SLOW_TEXT, { spinner: true }), SLOW_AFTER_MS);
@@ -38,6 +34,19 @@ function fail() {
 }
 
 const here = (rel) => new URL(rel, location.href).href;
+
+// The header links "Home" and "Time in market" move between the app's pages without reloading, by using the
+// app's own page list (hidden, but still there). If it isn't there yet, the plain link works as before.
+document.addEventListener("click", (e) => {
+  const link = e.target.closest?.("#site-header a[data-page]");
+  if (!link || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  const target = [...document.querySelectorAll('[data-testid="stSidebarNav"] a')]
+    .find((a) => a.textContent.trim().toLowerCase() === link.dataset.page.toLowerCase());
+  if (!target) return;
+  e.preventDefault();
+  target.click();
+  document.getElementById("nav-toggle").checked = false;
+});
 
 // Take the "first time load" note away once the app has drawn its first real element.
 // While Python is still starting, the page only holds an empty box or grey placeholder bars.
@@ -76,9 +85,15 @@ try {
       // stlite's own start-up error box shows the raw error, which for Python is a traceback (rule 8).
       // Our plain message below replaces it.
       disableErrorToasts: true,
-      // Light theme with a white background by default, even when the device is set to dark mode
-      streamlitConfig: { "client.showErrorDetails": "none", "client.toolbarMode": "minimal",
-                         "theme.base": "light", "theme.backgroundColor": "#FFFFFF" },
+      // stlite's own progress messages ("Loading Pyodide." and so on) are off: the loading screen replaces them.
+      disableProgressToasts: true,
+      // The same theme as .streamlit/config.toml, locked to light even when the device is set to dark mode
+      streamlitConfig: { "client.showErrorDetails": "none", "client.toolbarMode": "minimal", "server.maxUploadSize": 20,
+                         "theme.base": "light", "theme.backgroundColor": "#FAF8F3",
+                         "theme.secondaryBackgroundColor": "#F1EEE6", "theme.textColor": "#1B2333",
+                         "theme.primaryColor": "#002147", "theme.headingFont": "serif",
+                         "theme.baseRadius": "small", "theme.borderColor": "#D9D4C7",
+                         "theme.showWidgetBorder": false },
     },
     root,
   );

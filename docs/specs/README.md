@@ -15,3 +15,4 @@ Each file starts with a Status line. Superseded parts are kept as history.
 | 008 | [Works offline once loaded](008-offline.md) | Implemented |
 | 009 | [Reloading a page lands on Home](009-reload-redirect.md) | Implemented |
 | 010 | [Start-up never hangs silently](010-startup-stall.md) | Implemented |
+| 011 | [Editorial page style](011-editorial-ui.md) | Partly implemented (charts left out) |
