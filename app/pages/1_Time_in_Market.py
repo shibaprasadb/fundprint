@@ -14,7 +14,8 @@ from fundprint.insights import fund_gaps, periodicity
 from fundprint.lots import held_lots
 from fundprint.xirr import xirr
 
-st.set_page_config(page_title="Fundprint · Time in Market", page_icon="🔒", layout="wide")
+st.set_page_config(page_title="Time in market · Fundprint", page_icon=str(ui.FAVICON), layout="centered",
+                   initial_sidebar_state="collapsed")
 
 PERIODICITY_CAPTION = (
     "Every purchase you've made, including ones since sold, shown against the Nifty 50 for context. "
@@ -24,10 +25,11 @@ PERIODICITY_CAPTION = (
 
 
 def main():
-    ui.sidebar_note()
+    ui.setup()
     bench_rows, cats, manifest = ui.load_public_data()
 
     st.title("Returns by holding period")
+    standfirst = st.empty()   # filled in once the fund filter below has been read
 
     parsed = st.session_state.get("parsed")
     if parsed is None:
@@ -75,9 +77,8 @@ def main():
         return buf.getvalue()
 
 
-    st.header("By time in market")
-    scope = st.radio("Which funds? (This choice changes the charts and table in this section only.)",
-                     ["All funds", "Equity funds only"], horizontal=True)
+    scope = st.radio("Show", ["All funds", "Equity funds only"], horizontal=True)
+    st.caption("This choice changes the charts and table in this section only.")
     cf = all_cf
     if scope == "Equity funds only":
         keep = schemes[schemes.asset_class == "Equity"]
@@ -88,7 +89,7 @@ def main():
 
     def show_chart(fig, filename):
         st.pyplot(fig)
-        st.download_button("Download this chart (PNG)", png(fig), filename, "image/png")
+        st.download_button("Download PNG", png(fig), filename, "image/png")
         time.sleep(0.1)  # so this chart can paint before the next one is drawn
 
     with st.spinner("Drawing your charts. On a phone this can take a minute the first time."):
@@ -105,46 +106,43 @@ def main():
 
             active_xirr = 100 * xirr(cf.date, cf.amount)
             if pd.isna(active_xirr):
-                st.markdown(f"Your active XIRR for {label.lower()} could not be calculated.")
+                standfirst.markdown(f"Your active XIRR for {label.lower()} could not be calculated.")
             else:
-                st.markdown(f"Your active XIRR for {label.lower()} is **{active_xirr:.1f}%**.")
+                standfirst.markdown(f"Your active XIRR for {label.lower()} is **{active_xirr:.1f}%**.")
 
             show_chart(allocation_chart(table), "fundprint_allocation.png")
             show_chart(facet_chart(table, label, as_of), "fundprint_vs_nifty.png")
 
-            shown = table.rename(columns={
-                "share_%": "Share of money", "my_xirr_%": "My XIRR", "nifty_xirr_%": "Nifty XIRR",
-                "xirr_gap_%": "XIRR gap", "my_abs_%": "My abs. return", "nifty_abs_%": "Nifty abs. return",
-            }).map(ui.pct)
-            st.markdown(ui.markdown_table(shown, "Held for"))
+            st.markdown(ui.results_table(table), unsafe_allow_html=True)
 
         st.header("The big picture")
-        st.caption("These charts always use your whole portfolio; the toggle above doesn't change them.")
 
         gaps = fund_gaps(all_cf, bench, today)
         if gaps.table.empty:
             st.caption("No equity funds to compare.")
         else:
+            scope_note = "Whole portfolio: the choice above doesn't change this chart."
+            if (all_cf.asset_class != "Equity").any():
+                scope_note += " Debt, gold and other non-equity funds aren't shown."
+            st.caption(scope_note)
             show_chart(gaps_chart(gaps.table), "fundprint_index_twin.png")
             if gaps.n_hidden:
                 st.caption("Showing your 12 largest equity funds.")
-        if (all_cf.asset_class != "Equity").any():
-            st.caption("Debt, gold and other non-equity funds aren't shown here.")
 
         regular = periodicity(parsed.txns, bench)
         if regular is None:
             st.caption("No purchases fall inside the benchmark's history.")
         else:
+            st.caption("Whole portfolio: the choice above doesn't change this chart. " + PERIODICITY_CAPTION)
             show_chart(periodicity_chart(regular, as_of), "fundprint_regular_investing.png")
-            st.caption(PERIODICITY_CAPTION)
 
     with st.expander("How this is calculated"):
         st.markdown("""
     - **Held units only.** Each purchase is kept as a lot. Units you sold are taken from the oldest lots first (first in, first out). Bounced SIPs are removed, and reinvested dividends count as free units bought on their own date.
     - **Missing history.** If your statement starts after your first investment in a fund, the units you already held at the start are left out, because their purchase date and cost aren't in the statement.
     - **Buckets.** Each lot goes into a bucket by how long ago it was bought: under 1 year, 1-3, 3-5, and 5+ years.
-    - **XIRR.** For each bucket we line up the money you put in (on each purchase date) against what those units are worth today, and find the yearly rate that connects them.
-    - **Nifty 50 replay.** We take the same amounts on the same dates and imagine they went into a Nifty 50 index fund instead. Same cash flows, different fund, so the gap is about the fund and not about timing.
+    - **XIRR.** For each bucket I line up the money you put in (on each purchase date) against what those units are worth today, and find the yearly rate that connects them.
+    - **Nifty 50 replay.** I take the same amounts on the same dates and imagine they went into a Nifty 50 index fund instead. Same cash flows, different fund, so the gap is about the fund and not about timing.
     - **Under 1 year** the XIRR is annualised from a few months and swings wildly, so it is faded. Read the absolute return instead.
     - **Index twin per fund.** Each fund's purchases are replayed into a Nifty 50 index fund on the same dates, and the two XIRRs are compared. It is the Nifty 50 for every fund, not each fund's own category.
     - **Regular investing.** For each fund, Fundprint finds the day of the month you most often invest on, and counts a purchase as periodic if it's within 5 days of that day (counting across the month end). A fund needs at least 3 such purchases to have a pattern. Switches, reinvested dividends and reversed payments aren't counted.

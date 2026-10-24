@@ -102,7 +102,8 @@ def main():
     for page in sorted((ROOT / "app/pages").glob("*.py")):
         (DIST / f"{page_address(page)}.html").write_text(REDIRECT_PAGE)
     (DIST / "app-manifest.json").write_text(json.dumps({"files": [rel for _, rel in APP_FILES]}))
-    for name in ("index.html", "og-image.png", "boot.js", "pyodide-start.mjs", "umami.js", "feedback.js"):
+    for name in ("index.html", "og-image.png", "boot.js", "pyodide-start.mjs", "umami.js", "feedback.js",
+                 "favicon.svg", "favicon.png"):
         shutil.copy(ROOT / "web" / name, DIST / name)
     vendor = ROOT / "web/vendor"
     if vendor.exists():
