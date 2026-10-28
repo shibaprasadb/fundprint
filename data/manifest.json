@@ -2,13 +2,13 @@
   "benchmark": {
     "amfi_code": 120716,
     "source": "https://api.mfapi.in/mf/120716",
-    "fetched_at": "2026-10-27T08:06:59+00:00",
-    "rows": 3399,
-    "latest_date": "2026-10-26"
+    "fetched_at": "2026-10-28T08:47:53+00:00",
+    "rows": 3400,
+    "latest_date": "2026-10-27"
   },
   "scheme_categories": {
     "source": "https://portal.amfiindia.com/spages/NAVAll.txt",
-    "fetched_at": "2026-10-27T08:06:59+00:00",
-    "rows": 18201
+    "fetched_at": "2026-10-28T08:47:53+00:00",
+    "rows": 18202
   }
 }
